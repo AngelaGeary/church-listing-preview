@@ -20,9 +20,9 @@ body {
     line-height: 1.4;
 }
 
-/* Enhanced listing style - pink/purple border */
+/* Enhanced listing style - pink pastel background with darker pink border */
 .enhanced {
-    background-color: #ffffff;
+    background-color: #FFE6F0;
     padding: 12px 15px;
     border: 3px solid #E89AC7;
     border-radius: 15px;
@@ -33,11 +33,11 @@ body {
     line-height: 1.4;
 }
 
-/* Photo listing style - yellow/cream border */
+/* Photo listing style - yellow pastel background with darker yellow border */
 .photo {
-    background-color: #ffffff;
+    background-color: #FFFACD;
     padding: 12px 15px;
-    border: 3px solid #FFE066;
+    border: 3px solid #FFD700;
     border-radius: 15px;
     max-width: 400px;
     margin: 20px auto;
@@ -45,11 +45,12 @@ body {
     font-size: 13px;
     line-height: 1.4;
 }
-/* Church photo styling */
+/* Church photo styling - handle varied aspect ratios */
 .church-photo {
     width: 100%;
-    max-height: 200px;
+    max-height: 180px;
     object-fit: cover;
+    object-position: center;
     margin: 0 auto 8px auto;
     border-radius: 8px;
     display: block;
@@ -69,11 +70,11 @@ body {
 }
 
 .enhanced .church-name {
-    color: #8B4789;
+    color: #C76BA3;
 }
 
 .photo .church-name {
-    color: #2F8B45;
+    color: #B8960A;
 }
 
 /* Info lines - compact spacing */
