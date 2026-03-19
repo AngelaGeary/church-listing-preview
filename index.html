@@ -68,59 +68,159 @@
         function generateStandardListing(data) {
             const cityPrefix = data.countyOrCity ? `${data.countyOrCity}: ` : '';
             
-            return `
-                <div class="standard" style="text-align: left;">
-                    <strong>${cityPrefix}${data.church}</strong><br>
-                    ${data.address || ''}<br>
-                    ${data.meetings || ''}<br>
-                    ${data.contact ? `${data.contact} (${formatPhone(data.phone)})` : ''}<br>
-                    <strong>V:</strong> ${data.bibles || ''}<br>
-                    <strong>HB:</strong> ${data.hymnBooks || ''}<br>
-                    <strong>E:</strong> ${data.email || ''}<br>
-                    ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}
-                </div>
-            `;
+            let html = `<div class="standard">`;
+            
+            // Church name
+            html += `<div class="church-name">${cityPrefix}${data.church}</div>`;
+            
+            // Address
+            if (data.address) {
+                html += `<div class="info-line">${data.address}</div>`;
+            }
+            
+            // Meetings/Service times
+            if (data.meetings) {
+                html += `<div class="info-line">${data.meetings}</div>`;
+            }
+            
+            // Contact with phone
+            if (data.contact || data.phone) {
+                let contactLine = '';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            
+            // Bible version
+            if (data.bibles) {
+                html += `<div class="info-line"><strong>V:</strong> ${data.bibles}</div>`;
+            }
+            
+            // Hymnbook
+            if (data.hymnBooks) {
+                html += `<div class="info-line"><strong>HB:</strong> ${data.hymnBooks}</div>`;
+            }
+            
+            // Email
+            if (data.email) {
+                html += `<div class="info-line"><strong>E:</strong> ${data.email}</div>`;
+            }
+            
+            // Website
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            
+            html += `</div>`;
+            return html;
         }
 
         // Generate Enhanced listing HTML
         function generateEnhancedListing(data) {
-            return `
-                <div class="enhanced" style="text-align: center;">
-                    <div style="display: inline-block; text-align: center;">
-                        <strong style="display: block;">${data.church}</strong><br>
-                        <span style="display: block;">${data.address || ''}</span><br>
-                        <span style="display: block;">${data.meetings || ''}</span><br>
-                        <span style="display: block;"><strong>Contact:</strong> ${data.contact || ''} (${formatPhone(data.phone)})</span><br>
-                        <span style="display: block;"><strong>Bible:</strong> ${data.bibles || ''}</span><br>
-                        <span style="display: block;"><strong>Hymnbook:</strong> ${data.hymnBooks || ''}</span><br>
-                        <span style="display: block;"><strong>Email:</strong> ${data.email || ''}</span><br>
-                        <span style="display: block;"><strong>Website:</strong> ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}</span>
-                    </div>
-                </div>
-            `;
+            let html = `<div class="enhanced">`;
+            
+            // Church name
+            html += `<div class="church-name">${data.church}</div>`;
+            
+            // Address
+            if (data.address) {
+                html += `<div class="info-line">${data.address}</div>`;
+            }
+            
+            // Meetings/Service times
+            if (data.meetings) {
+                html += `<div class="info-line">${data.meetings}</div>`;
+            }
+            
+            // Contact with phone
+            if (data.contact || data.phone) {
+                let contactLine = '<strong>Contact:</strong> ';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            
+            // Bible version
+            if (data.bibles) {
+                html += `<div class="info-line"><strong>Bible:</strong> ${data.bibles}</div>`;
+            }
+            
+            // Hymnbook
+            if (data.hymnBooks) {
+                html += `<div class="info-line"><strong>Hymnbook:</strong> ${data.hymnBooks}</div>`;
+            }
+            
+            // Email
+            if (data.email) {
+                html += `<div class="info-line"><strong>Email:</strong> ${data.email}</div>`;
+            }
+            
+            // Website
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            
+            html += `</div>`;
+            return html;
         }
 
         // Generate Photo listing HTML
         function generatePhotoListing(data) {
-            const imageHtml = data.churchImage 
-                ? `<img src="${data.churchImage}" alt="${data.church}" class="church-photo" style="display: block; margin: 0 auto 20px auto;"><br>` 
-                : '<div style="padding: 20px; background: #f0f0f0; text-align: center; margin-bottom: 20px; border-radius: 4px;">📷 No photo uploaded yet</div>';
+            let html = `<div class="photo">`;
             
-            return `
-                <div class="photo" style="text-align: center;">
-                    <div style="display: inline-block; text-align: center;">
-                        ${imageHtml}
-                        <strong style="display: block;">${data.church}</strong><br>
-                        <span style="display: block;">${data.address || ''}</span><br>
-                        <span style="display: block;">${data.meetings || ''}</span><br>
-                        <span style="display: block;"><strong>Contact:</strong> ${data.contact || ''} (${formatPhone(data.phone)})</span><br>
-                        <span style="display: block;"><strong>Bible:</strong> ${data.bibles || ''}</span><br>
-                        <span style="display: block;"><strong>Hymnbook:</strong> ${data.hymnBooks || ''}</span><br>
-                        <span style="display: block;"><strong>Email:</strong> ${data.email || ''}</span><br>
-                        <span style="display: block;"><strong>Website:</strong> ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}</span>
-                    </div>
-                </div>
-            `;
+            // Church photo
+            if (data.churchImage) {
+                html += `<img src="${data.churchImage}" alt="${data.church}" class="church-photo">`;
+            } else {
+                html += `<div style="padding: 15px; background: #f5f5f5; text-align: center; margin-bottom: 8px; border-radius: 8px; font-size: 12px; color: #666;">📷 No photo uploaded yet</div>`;
+            }
+            
+            // Church name
+            html += `<div class="church-name">${data.church}</div>`;
+            
+            // Address
+            if (data.address) {
+                html += `<div class="info-line">${data.address}</div>`;
+            }
+            
+            // Meetings/Service times
+            if (data.meetings) {
+                html += `<div class="info-line">${data.meetings}</div>`;
+            }
+            
+            // Contact with phone
+            if (data.contact || data.phone) {
+                let contactLine = '<strong>Contact:</strong> ';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            
+            // Bible version
+            if (data.bibles) {
+                html += `<div class="info-line"><strong>Bible:</strong> ${data.bibles}</div>`;
+            }
+            
+            // Hymnbook
+            if (data.hymnBooks) {
+                html += `<div class="info-line"><strong>Hymnbook:</strong> ${data.hymnBooks}</div>`;
+            }
+            
+            // Email
+            if (data.email) {
+                html += `<div class="info-line"><strong>Email:</strong> ${data.email}</div>`;
+            }
+            
+            // Website
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            
+            html += `</div>`;
+            return html;
         }
 
         // Load and render the preview
