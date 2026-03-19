@@ -1,0 +1,12 @@
+{
+  "name": "church-listing-preview",
+  "version": "1.0.0",
+  "description": "Church listing preview system for Evangelical Times",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": ["church", "listings", "airtable", "preview"],
+  "author": "Evangelical Times",
+  "license": "ISC"
+}

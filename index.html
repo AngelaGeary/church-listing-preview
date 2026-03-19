@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Listing Preview</title>
+    <link rel="stylesheet" href="listings.css">
+    <style>
+        /* Additional styles for the preview interface */
+        .preview-container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .preview-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .preview-header h2 {
+            margin: 0 0 10px 0;
+            color: #2c5282;
+            font-size: 1.3em;
+        }
+        .preview-header p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .listing-wrapper {
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <h2>📋 Listing Preview</h2>
+            <p>This shows how your church listing will appear</p>
+        </div>
+
+        <button class="refresh-button" onclick="loadPreview()">🔄 Refresh Preview</button>
+
+        <div id="preview-content" class="listing-wrapper">
+            <div class="loading">Loading your listing preview...</div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Get the record ID and listing type from URL
+        const recordId = getUrlParameter('id');
+        const listingType = (getUrlParameter('type') || 'standard').toLowerCase();
+
+        // Format phone number
+        function formatPhone(phone) {
+            if (!phone) return '';
+            return `tel: ${phone}`;
+        }
+
+        // Generate Standard listing HTML
+        function generateStandardListing(data) {
+            const cityPrefix = data.countyOrCity ? `${data.countyOrCity}: ` : '';
+            
+            return `
+                <div class="standard" style="text-align: left;">
+                    <strong>${cityPrefix}${data.church}</strong><br>
+                    ${data.address || ''}<br>
+                    ${data.meetings || ''}<br>
+                    ${data.contact ? `${data.contact} (${formatPhone(data.phone)})` : ''}<br>
+                    <strong>V:</strong> ${data.bibles || ''}<br>
+                    <strong>HB:</strong> ${data.hymnBooks || ''}<br>
+                    <strong>E:</strong> ${data.email || ''}<br>
+                    ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}
+                </div>
+            `;
+        }
+
+        // Generate Enhanced listing HTML
+        function generateEnhancedListing(data) {
+            return `
+                <div class="enhanced" style="text-align: center;">
+                    <div style="display: inline-block; text-align: center;">
+                        <strong style="display: block;">${data.church}</strong><br>
+                        <span style="display: block;">${data.address || ''}</span><br>
+                        <span style="display: block;">${data.meetings || ''}</span><br>
+                        <span style="display: block;"><strong>Contact:</strong> ${data.contact || ''} (${formatPhone(data.phone)})</span><br>
+                        <span style="display: block;"><strong>Bible:</strong> ${data.bibles || ''}</span><br>
+                        <span style="display: block;"><strong>Hymnbook:</strong> ${data.hymnBooks || ''}</span><br>
+                        <span style="display: block;"><strong>Email:</strong> ${data.email || ''}</span><br>
+                        <span style="display: block;"><strong>Website:</strong> ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate Photo listing HTML
+        function generatePhotoListing(data) {
+            const imageHtml = data.churchImage 
+                ? `<img src="${data.churchImage}" alt="${data.church}" class="church-photo" style="display: block; margin: 0 auto 20px auto;"><br>` 
+                : '<div style="padding: 20px; background: #f0f0f0; text-align: center; margin-bottom: 20px; border-radius: 4px;">📷 No photo uploaded yet</div>';
+            
+            return `
+                <div class="photo" style="text-align: center;">
+                    <div style="display: inline-block; text-align: center;">
+                        ${imageHtml}
+                        <strong style="display: block;">${data.church}</strong><br>
+                        <span style="display: block;">${data.address || ''}</span><br>
+                        <span style="display: block;">${data.meetings || ''}</span><br>
+                        <span style="display: block;"><strong>Contact:</strong> ${data.contact || ''} (${formatPhone(data.phone)})</span><br>
+                        <span style="display: block;"><strong>Bible:</strong> ${data.bibles || ''}</span><br>
+                        <span style="display: block;"><strong>Hymnbook:</strong> ${data.hymnBooks || ''}</span><br>
+                        <span style="display: block;"><strong>Email:</strong> ${data.email || ''}</span><br>
+                        <span style="display: block;"><strong>Website:</strong> ${data.website ? `<a href="https://${data.website.replace(/^https?:\/\//, '')}" target="_blank">${data.website}</a>` : ''}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load and render the preview
+        async function loadPreview() {
+            const previewContent = document.getElementById('preview-content');
+            
+            if (!recordId) {
+                previewContent.innerHTML = '<div class="error">❌ No church record specified. Please check the URL.</div>';
+                return;
+            }
+
+            // Show loading state
+            previewContent.innerHTML = '<div class="loading">⏳ Loading your listing preview...</div>';
+
+            try {
+                // Fetch church data from our serverless function
+                const response = await fetch(`/.netlify/functions/get-church?id=${recordId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load church data (${response.status})`);
+                }
+
+                const data = await response.json();
+
+                // Generate the appropriate listing HTML based on type
+                let listingHtml;
+                switch (listingType) {
+                    case 'enhanced':
+                        listingHtml = generateEnhancedListing(data);
+                        break;
+                    case 'photo':
+                        listingHtml = generatePhotoListing(data);
+                        break;
+                    case 'standard':
+                    default:
+                        listingHtml = generateStandardListing(data);
+                        break;
+                }
+
+                previewContent.innerHTML = listingHtml;
+
+            } catch (error) {
+                console.error('Error loading preview:', error);
+                previewContent.innerHTML = `
+                    <div class="error">
+                        ❌ Unable to load preview<br>
+                        <small>${error.message}</small><br>
+                        <small>Please try refreshing the page or contact support.</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Load preview on page load
+        window.addEventListener('DOMContentLoaded', loadPreview);
+    </script>
+</body>
+</html>
