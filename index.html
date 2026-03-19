@@ -64,6 +64,12 @@
             return `tel: ${phone}`;
         }
 
+        // Format text with line breaks (replace \n with <br>)
+        function formatWithLineBreaks(text) {
+            if (!text) return '';
+            return text.replace(/\n/g, '<br>');
+        }
+
         // Generate Standard listing HTML
         function generateStandardListing(data) {
             const cityPrefix = data.countyOrCity ? `${data.countyOrCity}: ` : '';
@@ -80,7 +86,7 @@
             
             // Meetings/Service times
             if (data.meetings) {
-                html += `<div class="info-line">${data.meetings}</div>`;
+                html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
             }
             
             // Contact with phone
@@ -130,7 +136,7 @@
             
             // Meetings/Service times
             if (data.meetings) {
-                html += `<div class="info-line">${data.meetings}</div>`;
+                html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
             }
             
             // Contact with phone
@@ -187,7 +193,7 @@
             
             // Meetings/Service times
             if (data.meetings) {
-                html += `<div class="info-line">${data.meetings}</div>`;
+                html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
             }
             
             // Contact with phone
