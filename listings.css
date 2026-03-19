@@ -1,104 +1,100 @@
 /* Base styles */
 body {
     font-family: Arial, sans-serif;
-    line-height: 1.5;
-    color: #333333;
+    line-height: 1.3;
+    color: #000000;
     margin: 0;
     padding: 20px;
 }
-/* Standard listing style */
+
+/* Standard listing style - orange/peach border */
 .standard {
     background-color: #ffffff;
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    max-width: 800px;
+    padding: 12px 15px;
+    border: 3px solid #FFB366;
+    border-radius: 15px;
+    max-width: 400px;
     margin: 20px auto;
     text-align: left;
+    font-size: 13px;
+    line-height: 1.4;
 }
-/* Enhanced listing style */
+
+/* Enhanced listing style - pink/purple border */
 .enhanced {
-    background-color: #f8f8f8;
-    padding: 10px;
-    border: 2px solid #d0d0d0;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
+    background-color: #ffffff;
+    padding: 12px 15px;
+    border: 3px solid #E89AC7;
+    border-radius: 15px;
+    max-width: 400px;
     margin: 20px auto;
     text-align: center;
+    font-size: 13px;
+    line-height: 1.4;
 }
-/* Photo listing style */
+
+/* Photo listing style - yellow/cream border */
 .photo {
     background-color: #ffffff;
-    padding: 10px;
-    border: 2px solid #d0d0d0;
-    border-radius: 8px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-    max-width: 800px;
+    padding: 12px 15px;
+    border: 3px solid #FFE066;
+    border-radius: 15px;
+    max-width: 400px;
     margin: 20px auto;
     text-align: center;
+    font-size: 13px;
+    line-height: 1.4;
 }
-/* Church photo styling - Updated for specific requirements */
+/* Church photo styling */
 .church-photo {
     width: 100%;
-    height: 300px;
-    object-fit: scale-down;
-    margin: 0 auto 2px auto;
-    border-radius: 4px;
+    max-height: 200px;
+    object-fit: cover;
+    margin: 0 auto 8px auto;
+    border-radius: 8px;
     display: block;
-    text-align: center;
 }
-/* Container for the photo to maintain aspect ratio */
-.photo img.church-photo {
-    max-width: 100%;
-    max-height: 300px;
-}
-/* Typography for standard listing */
-.standard > *:first-child {
+
+/* Church name styling */
+.church-name {
     font-weight: bold;
-}
-/* Typography for enhanced and photo listings */
-.enhanced > *:first-child,
-.photo > *:first-child {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-size: 16px;
+    color: #0066A1;
+    margin-bottom: 4px;
     line-height: 1.2;
 }
-/* Line spacing for enhanced and photo listings */
-.enhanced br,
-.photo br {
-    display: block;
-    content: "";
-    margin-bottom: 10px;
+
+.standard .church-name {
+    color: #D2691E;
 }
-/* Make labels bold */
-.standard strong,
-.enhanced strong,
-.photo strong {
+
+.enhanced .church-name {
+    color: #8B4789;
+}
+
+.photo .church-name {
+    color: #2F8B45;
+}
+
+/* Info lines - compact spacing */
+.info-line {
+    margin: 2px 0;
+    line-height: 1.3;
+}
+
+/* Labels */
+strong {
     font-weight: bold;
-    display: inline-block;
-    margin-top: 5px;
 }
+
 /* Links */
 a {
-    color: #2c5282;
+    color: inherit;
     text-decoration: none;
 }
+
 a:hover {
     text-decoration: underline;
-}
-/* Make website and email clickable */
-.standard > *:last-child,
-.enhanced > *:last-child,
-.photo > *:last-child {
-    word-break: break-word;
-}
-/* Spacing between lines */
-br {
-    display: block;
-    margin: 5px 0;
-    content: "";
 }
 /* Responsive design */
 @media (max-width: 600px) {
