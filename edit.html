@@ -985,7 +985,20 @@
                 
             } catch (error) {
                 console.error('Error saving:', error);
-                alert('Error saving changes. Please try again.');
+                
+                // Show more specific error message
+                let errorMsg = 'Error saving changes. ';
+                if (error.message.includes('upload')) {
+                    errorMsg += 'Image upload failed. Please check the image file and try again.';
+                } else if (error.message.includes('save')) {
+                    errorMsg += 'Failed to save to database. Please try again.';
+                } else {
+                    errorMsg += 'Please try again. Error: ' + error.message;
+                }
+                
+                alert(errorMsg);
+                console.log('Full error details:', error);
+                
                 saveButton.textContent = 'Save Changes';
                 saveButton.disabled = false;
             }
