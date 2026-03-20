@@ -61,9 +61,10 @@
         .thank-you-banner {
             background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
             color: white;
-            padding: 20px 40px;
+            padding: 24px 40px;
             text-align: center;
             display: none;
+            margin-bottom: 0;
         }
         
         .thank-you-banner.show {
@@ -77,13 +78,33 @@
         
         .thank-you-banner p {
             margin: 5px 0;
-            font-size: 1.1em;
-            font-family: Arial, sans-serif;
+            font-size: 1.05em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         }
         
         .thank-you-banner .checkmark {
             display: inline-block;
             color: #C8E6C9;
+        }
+        
+        /* Instructions banner between thank you and edit area */
+        .instructions-banner {
+            background: #f9fafb;
+            padding: 20px 40px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            display: none;
+        }
+        
+        .instructions-banner.show {
+            display: block;
+        }
+        
+        .instructions-banner p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.95em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         }
         
         /* Split screen layout for edit mode */
@@ -413,6 +434,11 @@
             <p><span class="checkmark">✓</span> Included in <strong id="edition-name"></strong></p>
         </div>
 
+        <!-- Instructions banner -->
+        <div class="instructions-banner" id="instructions-banner">
+            <p>Review and update your church details below. Changes are saved to your listing.</p>
+        </div>
+
         <!-- Edit mode (post-purchase) -->
         <div class="split-container" id="edit-container">
             <div class="edit-panel">
@@ -466,6 +492,15 @@
                         <label>Website <span class="char-count" id="website-count"></span></label>
                         <input type="url" id="website" maxlength="100">
                         <small>e.g., www.yourchurch.org.uk</small>
+                    </div>
+                    
+                    <div class="form-group" id="image-upload-group" style="display: none;">
+                        <label>Church Image</label>
+                        <div style="margin-bottom: 10px;">
+                            <img id="current-image" src="" alt="Current church image" style="max-width: 200px; max-height: 150px; border-radius: 8px; display: none; margin-bottom: 10px;">
+                        </div>
+                        <input type="file" id="church-image" accept="image/*" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px;">
+                        <small>Upload a new photo for your Photo listing (JPG, PNG, max 5MB)</small>
                     </div>
                     
                     <div class="form-group">
@@ -595,6 +630,7 @@
         function showEditMode() {
             document.getElementById('page-title').textContent = 'Edit Your Listing';
             document.getElementById('thank-you-banner').classList.add('show');
+            document.getElementById('instructions-banner').classList.add('show');
             document.getElementById('edit-container').classList.add('show');
             
             // Populate thank you banner with actual data
@@ -632,6 +668,19 @@
             document.getElementById('website').value = churchData.website || '';
             document.getElementById('notes').value = churchData.notes || '';
             
+            // Show image upload for Photo listings
+            const listingType = (churchData.listingType || 'standard').toLowerCase();
+            if (listingType === 'photo') {
+                document.getElementById('image-upload-group').style.display = 'block';
+                
+                // Show current image if exists
+                if (churchData.churchImage) {
+                    const currentImage = document.getElementById('current-image');
+                    currentImage.src = churchData.churchImage;
+                    currentImage.style.display = 'block';
+                }
+            }
+            
             // Update character counts
             updateCharCounts();
         }
@@ -656,6 +705,50 @@
                     }
                 });
             });
+            
+            // Handle image upload
+            const imageUpload = document.getElementById('church-image');
+            if (imageUpload) {
+                imageUpload.addEventListener('change', async function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('Image is too large. Please choose an image under 5MB.');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Show loading state
+                        const currentImage = document.getElementById('current-image');
+                        currentImage.style.opacity = '0.5';
+                        
+                        const reader = new FileReader();
+                        reader.onload = async function(e) {
+                            const imageData = e.target.result;
+                            
+                            // Show preview immediately
+                            currentImage.src = imageData;
+                            currentImage.style.display = 'block';
+                            currentImage.style.opacity = '1';
+                            
+                            // Update live preview
+                            churchData.churchImage = imageData;
+                            generatePreviewFromForm();
+                            
+                            // Store the base64 data for upload on save
+                            window.pendingImageUpload = imageData;
+                            
+                            // Show unsaved warning
+                            if (!hasUnsavedChanges) {
+                                hasUnsavedChanges = true;
+                                document.getElementById('unsaved-warning').style.display = 'block';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
             
             // Clear unsaved flag on save
             window.clearUnsavedFlag = function() {
@@ -813,20 +906,52 @@
             saveButton.disabled = true;
             saveButton.textContent = 'Saving...';
             
-            // Get form data
-            const formData = {
-                'Address': document.getElementById('address').value,
-                'Meetings': document.getElementById('meetings').value,
-                'Contact': document.getElementById('contact').value,
-                'Phone': document.getElementById('phone').value,
-                'Email': document.getElementById('email').value,
-                'Bibles': document.getElementById('bibles').value,
-                'Hymn books': document.getElementById('hymnbooks').value,
-                'Website': document.getElementById('website').value,
-                'Notes': document.getElementById('notes').value
-            };
-            
             try {
+                // If there's a pending image upload, upload to Cloudinary first
+                let imageUrl = null;
+                if (window.pendingImageUpload) {
+                    saveButton.textContent = 'Uploading image...';
+                    
+                    const uploadResponse = await fetch('/.netlify/functions/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageData: window.pendingImageUpload,
+                            recordId: recordId
+                        })
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        throw new Error('Failed to upload image');
+                    }
+                    
+                    const uploadData = await uploadResponse.json();
+                    imageUrl = uploadData.url;
+                    
+                    // Clear pending upload
+                    window.pendingImageUpload = null;
+                }
+                
+                // Prepare form data
+                const formData = {
+                    'Address': document.getElementById('address').value,
+                    'Meetings': document.getElementById('meetings').value,
+                    'Contact': document.getElementById('contact').value,
+                    'Phone': document.getElementById('phone').value,
+                    'Email': document.getElementById('email').value,
+                    'Bibles': document.getElementById('bibles').value,
+                    'Hymn books': document.getElementById('hymnbooks').value,
+                    'Website': document.getElementById('website').value,
+                    'Notes': document.getElementById('notes').value
+                };
+                
+                // Add image URL if uploaded
+                if (imageUrl) {
+                    formData['Church image'] = [{ url: imageUrl }];
+                }
+                
+                saveButton.textContent = 'Saving details...';
+                
                 // Call Netlify function to update Airtable
                 const response = await fetch(`/.netlify/functions/update-church`, {
                     method: 'POST',
@@ -838,6 +963,11 @@
                 });
                 
                 if (!response.ok) throw new Error('Failed to save');
+                
+                // Update churchData with new image URL if uploaded
+                if (imageUrl) {
+                    churchData.churchImage = imageUrl;
+                }
                 
                 // Show success message
                 document.getElementById('success-message-preview').classList.add('show');
