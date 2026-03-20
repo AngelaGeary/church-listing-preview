@@ -534,11 +534,11 @@
                 </button>
                 
                 <!-- Church Finder Map Preview in same column -->
-                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
-                    <h4 style="color: #1B3A5C; margin: 0 0 8px 0; font-size: 1.1em; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;">
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #d12027;">
+                    <h4 style="color: #d12027; margin: 0 0 8px 0; font-size: 1.1em; font-weight: 600; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
                         Church Finder Preview
                     </h4>
-                    <p style="color: #6b7280; font-size: 0.85em; margin-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                    <p style="color: #6b7280; font-size: 0.85em; margin-bottom: 12px; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
                         How you appear on our church finder
                     </p>
                     
@@ -1044,6 +1044,24 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- Custom popup styling to match ET Church Finder -->
+    <style>
+        .et-church-popup .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            border: 1px solid #d12027;
+            box-shadow: 0 3px 14px rgba(209, 32, 39, 0.15);
+        }
+        
+        .et-church-popup .leaflet-popup-tip {
+            border-top-color: #d12027;
+        }
+        
+        .et-church-popup .leaflet-popup-content {
+            margin: 15px;
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+        }
+    </style>
+    
     <!-- Church Finder Map -->
     <script>
         let churchMap = null;
@@ -1099,18 +1117,26 @@
                 // Add marker
                 churchMarker = L.marker([location.lat, location.lng]).addTo(churchMap);
                 
-                // Create popup content
+                // Create popup content with ET branding
                 const popupContent = `
-                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 250px;">
-                        <h3 style="margin: 0 0 8px 0; color: #1B3A5C; font-size: 1.1em;">${location.name}</h3>
-                        <p style="margin: 0 0 6px 0; color: #6b7280; font-size: 0.9em;">${location.address}</p>
-                        ${location.phone ? `<p style="margin: 0 0 4px 0; font-size: 0.85em;"><strong>Phone:</strong> ${location.phone}</p>` : ''}
-                        ${location.website ? `<p style="margin: 0; font-size: 0.85em;"><a href="${location.website}" target="_blank" style="color: #2563eb;">Visit Website →</a></p>` : ''}
+                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; max-width: 280px; font-size: 12px;">
+                        <h3 style="margin: 0 0 10px 0; color: #d12027; font-size: 16px; font-weight: 600; border-bottom: 2px solid #d12027; padding-bottom: 8px;">${location.name}</h3>
+                        <p style="margin: 0 0 8px 0; color: #333; font-size: 12px; line-height: 1.5;">${location.address}</p>
+                        ${location.Contact ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Contact:</strong> ${location.Contact}</p>` : ''}
+                        ${location.phone ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Phone:</strong> <a href="tel:${location.phone}" style="color: #d12027; text-decoration: none;">${location.phone}</a></p>` : ''}
+                        ${location.email ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Email:</strong> <a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                        ${location.Meetings ? `<p style="margin: 8px 0 6px 0; font-size: 12px; line-height: 1.4;">${location.Meetings.replace(/\n/g, '<br>')}</p>` : ''}
+                        ${location.Bibles ? `<p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">${location.Bibles}</p>` : ''}
+                        ${location['Hymn books'] ? `<p style="margin: 0 0 6px 0; font-size: 11px; color: #666;">${location['Hymn books']}</p>` : ''}
+                        ${location.website ? `<p style="margin: 8px 0 0 0; font-size: 12px;"><a href="${location.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
                     </div>
                 `;
                 
                 // Bind and open popup
-                churchMarker.bindPopup(popupContent).openPopup();
+                churchMarker.bindPopup(popupContent, {
+                    maxWidth: 300,
+                    className: 'et-church-popup'
+                }).openPopup();
                 
                 console.log('✅ Map fully loaded!');
                 
