@@ -675,6 +675,9 @@
             
             // Setup form submission
             document.getElementById('edit-form').addEventListener('submit', handleSave);
+            
+            // Initialize church map AFTER data is loaded
+            setTimeout(initChurchMap, 500);
         }
 
         function showMarketingMode() {
@@ -1043,23 +1046,40 @@
         let churchMarker = null;
         
         async function initChurchMap() {
+            console.log('🗺️ Starting map initialization...');
+            console.log('Church data:', window.churchData);
+            
             if (!window.churchData || !window.churchData.church) {
-                console.log('No church data available for map');
+                console.error('❌ No church data available for map');
                 return;
             }
             
             try {
+                console.log('📡 Fetching church location from API...');
+                
                 // Fetch church location from Store Locator API
                 const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(window.churchData.church)}`);
                 
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API response error:', errorText);
                     throw new Error('Failed to fetch church location');
                 }
                 
                 const data = await response.json();
                 const location = data.location;
                 
-                console.log('Church location:', location);
+                console.log('✅ Church location data:', location);
+                
+                // Check if Google Maps is loaded
+                if (typeof google === 'undefined' || !google.maps) {
+                    console.error('❌ Google Maps not loaded');
+                    throw new Error('Google Maps API not loaded');
+                }
+                
+                console.log('🗺️ Initializing Google Map...');
                 
                 // Initialize Google Map
                 const mapElement = document.getElementById('church-map');
@@ -1075,6 +1095,8 @@
                         }
                     ]
                 });
+                
+                console.log('📍 Adding marker...');
                 
                 // Add marker
                 churchMarker = new google.maps.Marker({
@@ -1101,19 +1123,22 @@
                 // Open info window by default
                 infoWindow.open(churchMap, churchMarker);
                 
+                console.log('✅ Map fully loaded!');
+                
                 // Re-open on marker click
                 churchMarker.addListener('click', () => {
                     infoWindow.open(churchMap, churchMarker);
                 });
                 
             } catch (error) {
-                console.error('Error loading church map:', error);
+                console.error('❌ Error loading church map:', error);
                 document.getElementById('church-map').innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444; padding: 20px; text-align: center;">
                         <div>
                             <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
-                            <div>Unable to load map preview</div>
-                            <div style="font-size: 0.85em; color: #9ca3af; margin-top: 5px;">Your church may not be in the finder yet</div>
+                            <div style="font-weight: 600;">Unable to load map preview</div>
+                            <div style="font-size: 0.85em; color: #9ca3af; margin-top: 5px;">Check browser console for details</div>
+                            <div style="font-size: 0.8em; color: #9ca3af; margin-top: 3px;">${error.message}</div>
                         </div>
                     </div>
                 `;
@@ -1121,11 +1146,7 @@
         }
         
         // Initialize map when in edit mode
-        if (mode === 'edit') {
-            window.addEventListener('load', () => {
-                setTimeout(initChurchMap, 1000);
-            });
-        }
+        // Note: Map is now initialized in showEditMode() after data loads
     </script>
 </body>
 </html>
