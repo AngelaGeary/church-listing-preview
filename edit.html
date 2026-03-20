@@ -535,6 +535,27 @@
             </div>
         </div>
 
+        <!-- Store Locator Preview (Edit mode only) -->
+        <div class="store-locator-container" id="store-locator-container" style="display: none;">
+            <div style="max-width: 1400px; margin: 0 auto; padding: 32px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 40px;">
+                <h3 style="color: #1B3A5C; margin-top: 0; font-size: 1.3em; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;">
+                    Church Finder Preview
+                </h3>
+                <p style="color: #6b7280; font-size: 0.9em; margin-bottom: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                    This is how your church appears on our Church Finder
+                </p>
+                
+                <div id="storelocatorwidget" style="width:100%; height: 600px; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+                    <p><a href="https://www.storelocatorwidgets.com">Loading Store Locator Software</a>...</p>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 0.85em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                    💡 <strong>Tip:</strong> This preview shows your church as it appears on 
+                    <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #2563eb; text-decoration: none;">evangelical-times.org/churches</a>
+                </div>
+            </div>
+        </div>
+
         <!-- Marketing mode (pre-purchase) -->
         <div class="marketing-container" id="marketing-container">
             <h2 class="marketing-headline">Will 20,000+ monthly searchers find YOUR church?</h2>
@@ -632,6 +653,7 @@
             document.getElementById('thank-you-banner').classList.add('show');
             document.getElementById('instructions-banner').classList.add('show');
             document.getElementById('edit-container').classList.add('show');
+            document.getElementById('store-locator-container').style.display = 'block';
             
             // Populate thank you banner with actual data
             document.getElementById('billing-name').textContent = churchData.billingName || 'Church Administrator';
@@ -1003,6 +1025,36 @@
                 saveButton.disabled = false;
             }
         }
+    </script>
+    
+    <!-- Store Locator Widget Scripts -->
+    <script type="text/javascript" id="mapboxscript" src="//cdn.storelocatorwidgets.com/widget/mapbox-gl.js"></script>
+    <script type="text/javascript" id="storelocatorscript" data-uid="srQBs646LvoPxvddF6GB7J41vrjXJ3AM" data-platform="MapTiler" src="//cdn.storelocatorwidgets.com/widget/widget.js"></script>
+    <script type="text/javascript" src="//cdn.storelocatorwidgets.com/widget/algolia-autocomplete.js"></script>
+    
+    <!-- Auto-search for church in Store Locator -->
+    <script>
+        // Wait for store locator to load, then search for the church
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (window.churchData && window.churchData.church) {
+                    // Try to trigger search in the store locator widget
+                    const searchInput = document.querySelector('#storelocatorwidget input[type="text"]');
+                    if (searchInput) {
+                        searchInput.value = window.churchData.church;
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        // Trigger search after a short delay
+                        setTimeout(() => {
+                            const searchButton = document.querySelector('#storelocatorwidget button[type="submit"]');
+                            if (searchButton) {
+                                searchButton.click();
+                            }
+                        }, 500);
+                    }
+                }
+            }, 2000); // Wait 2 seconds for widget to fully load
+        });
     </script>
 </body>
 </html>
