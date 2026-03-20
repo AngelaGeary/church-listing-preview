@@ -1134,12 +1134,13 @@
                 // Add marker with red icon
                 churchMarker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(churchMap);
                 
-                // Simplified popup - just church name and contact
+                // Simplified popup using Airtable data
                 const popupContent = `
-                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px;">
-                        <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 16px; font-weight: 600;">${location.name}</h3>
-                        <p style="margin: 0 0 6px 0; color: #666; font-size: 12px;">${location.Contact || 'Pastor Thomas Yates'}</p>
-                        <p style="margin: 0; font-size: 12px;"><a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>
+                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
+                        <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${window.churchData.church}</h3>
+                        <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${window.churchData.contact || ''}</p>
+                        ${window.churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                        ${window.churchData.meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${window.churchData.meetings.split(';')[0].trim()}</p>` : ''}
                     </div>
                 `;
                 
@@ -1151,22 +1152,25 @@
                 
                 console.log('✅ Map fully loaded!');
                 
-                // Add detailed info box below map (matching Church Finder list view)
+                // Add detailed info box below map using Airtable data
                 const infoBox = document.getElementById('church-map-details');
                 if (infoBox) {
+                    const imageHtml = window.churchData.churchImage ? 
+                        `<img src="${window.churchData.churchImage}" style="width: 240px; float: left; padding-right: 15px; margin-bottom: 15px; margin-top: 15px; border-radius: 8px;">` : 
+                        '';
+                    
                     infoBox.innerHTML = `
-                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px;">
-                            <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px;">
-                                <a href="${location.website || '#'}" target="_blank" style="color: #d12027; text-decoration: none;">${location.name}</a>
-                            </h3>
-                            <p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${location.address}</p>
-                            <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${location.Contact || 'Pastor Thomas Yates'}</p>
-                            ${location.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
-                            ${location.phone ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><a href="tel:${location.phone}" style="color: #d12027; text-decoration: none;">${location.phone}</a></p>` : ''}
-                            ${location.Meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${location.Meetings.replace(/; /g, '<br>')}</p>` : ''}
-                            ${location.Bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${location.Bibles}</p>` : ''}
-                            ${location['Hymn books'] ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${location['Hymn books']}</p>` : ''}
-                            ${location.website ? `<p style="margin: 0; font-size: 14px;"><a href="${location.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px; overflow: auto;">
+                            ${imageHtml}
+                            <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px; font-weight: 600;">${window.churchData.church}</h3>
+                            <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.address}</p>
+                            ${window.churchData.contact ? `<p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.contact}</p>` : ''}
+                            ${window.churchData.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;">✉️ <a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                            ${window.churchData.phone ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="tel:${window.churchData.phone}" style="color: #d12027; text-decoration: none;">${window.churchData.phone}</a></p>` : ''}
+                            ${window.churchData.meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${window.churchData.meetings.replace(/; /g, '<br>')}</p>` : ''}
+                            ${window.churchData.bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${window.churchData.bibles}</p>` : ''}
+                            ${window.churchData.hymnBooks ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${window.churchData.hymnBooks}</p>` : ''}
+                            ${window.churchData.website ? `<p style="margin: 0; font-size: 14px;">🌐 <a href="${window.churchData.website.startsWith('http') ? window.churchData.website : 'https://' + window.churchData.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
                         </div>
                     `;
                 }
