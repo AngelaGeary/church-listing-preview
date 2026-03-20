@@ -3,31 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Church Listing Preview</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>Church Listing Preview - ET Holiday Church 2026</title>
     <link rel="stylesheet" href="listings.css">
     <style>
-        /* Additional styles for the preview interface */
+        /* ET Branded styles */
+        body {
+            background: #f5f5f5;
+            font-family: 'Georgia', serif;
+        }
+        
         .preview-container {
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0;
         }
-        .preview-header {
+        
+        .et-header {
+            background: linear-gradient(135deg, #1B3A5C 0%, #2c5282 100%);
+            padding: 30px 40px;
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e0e0e0;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .preview-header h2 {
-            margin: 0 0 10px 0;
-            color: #2c5282;
-            font-size: 1.3em;
+        
+        .et-logo {
+            width: 60px;
+            height: 60px;
+            background: #D32F2F;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            font-family: Arial, sans-serif;
         }
-        .preview-header p {
-            margin: 5px 0;
-            color: #666;
-            font-size: 0.9em;
+        
+        .et-header h1 {
+            margin: 0;
+            font-size: 1.1em;
+            font-weight: normal;
+            letter-spacing: 3px;
+            color: #C9A961;
+            text-transform: uppercase;
         }
+        
+        .et-header h2 {
+            margin: 10px 0 0 0;
+            font-size: 1.8em;
+            font-weight: normal;
+            color: white;
+        }
+        
+        .content-wrapper {
+            background: white;
+            padding: 40px;
+            margin: 0 20px 40px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
         .listing-wrapper {
             min-height: 200px;
         }
@@ -35,15 +74,18 @@
 </head>
 <body>
     <div class="preview-container">
-        <div class="preview-header">
+        <div class="et-header">
+            <div class="et-logo">ET</div>
+            <h1>Holiday Church 2026</h1>
             <h2>📋 Listing Preview</h2>
-            <p>This shows how your church listing will appear</p>
         </div>
 
-        <button class="refresh-button" onclick="loadPreview()">🔄 Refresh Preview</button>
+        <div class="content-wrapper">
+            <button class="refresh-button" onclick="loadPreview()">🔄 Refresh Preview</button>
 
-        <div id="preview-content" class="listing-wrapper">
-            <div class="loading">Loading your listing preview...</div>
+            <div id="preview-content" class="listing-wrapper">
+                <div class="loading">Loading your listing preview...</div>
+            </div>
         </div>
     </div>
 
