@@ -533,7 +533,7 @@
                     Save Changes
                 </button>
                 
-                <!-- Store Locator Preview in same column -->
+                <!-- Church Finder Map Preview in same column -->
                 <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
                     <h4 style="color: #1B3A5C; margin: 0 0 8px 0; font-size: 1.1em; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;">
                         Church Finder Preview
@@ -542,8 +542,13 @@
                         How you appear on our church finder
                     </p>
                     
-                    <div id="storelocatorwidget" style="width:100%; height: 450px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb;">
-                        <p style="padding: 20px; color: #9ca3af;">Loading map...</p>
+                    <div id="church-map" style="width:100%; height: 450px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; background: #f9fafb;">
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #9ca3af;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">🗺️</div>
+                                <div>Loading map...</div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-size: 0.8em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
@@ -554,9 +559,9 @@
             </div>
         </div>
 
-        <!-- Store Locator Container - REMOVED, now in preview panel -->
+        <!-- Store Locator Container - REMOVED, replaced with custom map -->
         <div class="store-locator-container" id="store-locator-container" style="display: none;">
-            <!-- Moved to preview panel -->
+            <!-- Replaced with custom Google Map -->
         </div>
 
         <!-- Marketing mode (pre-purchase) -->
@@ -1029,65 +1034,98 @@
         }
     </script>
     
-    <!-- Store Locator Widget Scripts -->
-    <script type="text/javascript" id="mapboxscript" src="//cdn.storelocatorwidgets.com/widget/mapbox-gl.js"></script>
-    <script type="text/javascript" id="storelocatorscript" data-uid="srQBs646LvoPxvddF6GB7J41vrjXJ3AM" data-platform="MapTiler" src="//cdn.storelocatorwidgets.com/widget/widget.js"></script>
-    <script type="text/javascript" src="//cdn.storelocatorwidgets.com/widget/algolia-autocomplete.js"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dN3swNcg7g&libraries=places"></script>
     
-    <!-- Auto-search for church in Store Locator -->
+    <!-- Church Finder Map -->
     <script>
-        // Wait for store locator to load, then search for the church
-        window.addEventListener('load', function() {
-            // Give the widget time to fully initialize
-            setTimeout(function() {
-                if (window.churchData && window.churchData.church) {
-                    console.log('Searching for church:', window.churchData.church);
-                    
-                    // Try multiple times to find the search input (widget loads async)
-                    let attempts = 0;
-                    const maxAttempts = 10;
-                    
-                    const trySearch = setInterval(function() {
-                        attempts++;
-                        
-                        // Look for the search input field
-                        const searchInput = document.querySelector('#storelocatorwidget input[type="text"]') ||
-                                          document.querySelector('#storelocatorwidget input.aa-input') ||
-                                          document.querySelector('#storelocatorwidget input[placeholder*="address"]') ||
-                                          document.querySelector('#storelocatorwidget input[placeholder*="church"]');
-                        
-                        if (searchInput) {
-                            console.log('Found search input, triggering search...');
-                            
-                            // Set the value
-                            searchInput.value = window.churchData.church;
-                            
-                            // Trigger various events to make the widget recognize the input
-                            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            searchInput.dispatchEvent(new Event('change', { bubbles: true }));
-                            searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-                            searchInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
-                            
-                            // Try to find and click the search/submit button
-                            setTimeout(() => {
-                                const buttons = document.querySelectorAll('#storelocatorwidget button');
-                                buttons.forEach(btn => {
-                                    if (btn.type === 'submit' || btn.textContent.includes('Search') || btn.textContent.includes('Find')) {
-                                        console.log('Clicking search button');
-                                        btn.click();
-                                    }
-                                });
-                            }, 300);
-                            
-                            clearInterval(trySearch);
-                        } else if (attempts >= maxAttempts) {
-                            console.log('Could not find search input after', maxAttempts, 'attempts');
-                            clearInterval(trySearch);
-                        }
-                    }, 500);
+        let churchMap = null;
+        let churchMarker = null;
+        
+        async function initChurchMap() {
+            if (!window.churchData || !window.churchData.church) {
+                console.log('No church data available for map');
+                return;
+            }
+            
+            try {
+                // Fetch church location from Store Locator API
+                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(window.churchData.church)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch church location');
                 }
-            }, 2000);
-        });
+                
+                const data = await response.json();
+                const location = data.location;
+                
+                console.log('Church location:', location);
+                
+                // Initialize Google Map
+                const mapElement = document.getElementById('church-map');
+                
+                churchMap = new google.maps.Map(mapElement, {
+                    center: { lat: location.lat, lng: location.lng },
+                    zoom: 15,
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ]
+                });
+                
+                // Add marker
+                churchMarker = new google.maps.Marker({
+                    position: { lat: location.lat, lng: location.lng },
+                    map: churchMap,
+                    title: location.name,
+                    animation: google.maps.Animation.DROP
+                });
+                
+                // Create info window
+                const infoContent = `
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 250px;">
+                        <h3 style="margin: 0 0 8px 0; color: #1B3A5C; font-size: 1.1em;">${location.name}</h3>
+                        <p style="margin: 0 0 6px 0; color: #6b7280; font-size: 0.9em;">${location.address}</p>
+                        ${location.phone ? `<p style="margin: 0 0 4px 0; font-size: 0.85em;"><strong>Phone:</strong> ${location.phone}</p>` : ''}
+                        ${location.website ? `<p style="margin: 0; font-size: 0.85em;"><a href="${location.website}" target="_blank" style="color: #2563eb;">Visit Website →</a></p>` : ''}
+                    </div>
+                `;
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: infoContent
+                });
+                
+                // Open info window by default
+                infoWindow.open(churchMap, churchMarker);
+                
+                // Re-open on marker click
+                churchMarker.addListener('click', () => {
+                    infoWindow.open(churchMap, churchMarker);
+                });
+                
+            } catch (error) {
+                console.error('Error loading church map:', error);
+                document.getElementById('church-map').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444; padding: 20px; text-align: center;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                            <div>Unable to load map preview</div>
+                            <div style="font-size: 0.85em; color: #9ca3af; margin-top: 5px;">Your church may not be in the finder yet</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize map when in edit mode
+        if (mode === 'edit') {
+            window.addEventListener('load', () => {
+                setTimeout(initChurchMap, 1000);
+            });
+        }
     </script>
 </body>
 </html>
