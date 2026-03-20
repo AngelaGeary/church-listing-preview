@@ -1062,8 +1062,8 @@
                 console.log('📡 Fetching church location from API...');
                 
                 // Fetch church location from Store Locator API
-                // Try searching by city first, then fall back to full address
-                const searchTerm = window.churchData.countyOrCity || window.churchData.address || window.churchData.church;
+                // Try full address first for best results
+                const searchTerm = window.churchData.address || window.churchData.countyOrCity || window.churchData.church;
                 
                 console.log('Searching Store Locator for:', searchTerm);
                 
