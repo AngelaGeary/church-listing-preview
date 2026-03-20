@@ -532,28 +532,31 @@
                 <button type="button" class="save-button" id="save-button-preview" onclick="document.getElementById('edit-form').dispatchEvent(new Event('submit'))">
                     Save Changes
                 </button>
+                
+                <!-- Store Locator Preview in same column -->
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
+                    <h4 style="color: #1B3A5C; margin: 0 0 8px 0; font-size: 1.1em; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;">
+                        Church Finder Preview
+                    </h4>
+                    <p style="color: #6b7280; font-size: 0.85em; margin-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                        How you appear on our church finder
+                    </p>
+                    
+                    <div id="storelocatorwidget" style="width:100%; height: 450px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb;">
+                        <p style="padding: 20px; color: #9ca3af;">Loading map...</p>
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-size: 0.8em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                        💡 See the full finder at 
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #2563eb; text-decoration: none;">evangelical-times.org/churches</a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Store Locator Preview (Edit mode only) -->
+        <!-- Store Locator Container - REMOVED, now in preview panel -->
         <div class="store-locator-container" id="store-locator-container" style="display: none;">
-            <div style="max-width: 1400px; margin: 0 auto; padding: 32px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 40px;">
-                <h3 style="color: #1B3A5C; margin-top: 0; font-size: 1.3em; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;">
-                    Church Finder Preview
-                </h3>
-                <p style="color: #6b7280; font-size: 0.9em; margin-bottom: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
-                    This is how your church appears on our Church Finder
-                </p>
-                
-                <div id="storelocatorwidget" style="width:100%; height: 600px; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
-                    <p><a href="https://www.storelocatorwidgets.com">Loading Store Locator Software</a>...</p>
-                </div>
-                
-                <div style="margin-top: 15px; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 0.85em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
-                    💡 <strong>Tip:</strong> This preview shows your church as it appears on 
-                    <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #2563eb; text-decoration: none;">evangelical-times.org/churches</a>
-                </div>
-            </div>
+            <!-- Moved to preview panel -->
         </div>
 
         <!-- Marketing mode (pre-purchase) -->
@@ -653,7 +656,6 @@
             document.getElementById('thank-you-banner').classList.add('show');
             document.getElementById('instructions-banner').classList.add('show');
             document.getElementById('edit-container').classList.add('show');
-            document.getElementById('store-locator-container').style.display = 'block';
             
             // Populate thank you banner with actual data
             document.getElementById('billing-name').textContent = churchData.billingName || 'Church Administrator';
@@ -1036,24 +1038,55 @@
     <script>
         // Wait for store locator to load, then search for the church
         window.addEventListener('load', function() {
+            // Give the widget time to fully initialize
             setTimeout(function() {
                 if (window.churchData && window.churchData.church) {
-                    // Try to trigger search in the store locator widget
-                    const searchInput = document.querySelector('#storelocatorwidget input[type="text"]');
-                    if (searchInput) {
-                        searchInput.value = window.churchData.church;
-                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('Searching for church:', window.churchData.church);
+                    
+                    // Try multiple times to find the search input (widget loads async)
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    
+                    const trySearch = setInterval(function() {
+                        attempts++;
                         
-                        // Trigger search after a short delay
-                        setTimeout(() => {
-                            const searchButton = document.querySelector('#storelocatorwidget button[type="submit"]');
-                            if (searchButton) {
-                                searchButton.click();
-                            }
-                        }, 500);
-                    }
+                        // Look for the search input field
+                        const searchInput = document.querySelector('#storelocatorwidget input[type="text"]') ||
+                                          document.querySelector('#storelocatorwidget input.aa-input') ||
+                                          document.querySelector('#storelocatorwidget input[placeholder*="address"]') ||
+                                          document.querySelector('#storelocatorwidget input[placeholder*="church"]');
+                        
+                        if (searchInput) {
+                            console.log('Found search input, triggering search...');
+                            
+                            // Set the value
+                            searchInput.value = window.churchData.church;
+                            
+                            // Trigger various events to make the widget recognize the input
+                            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                            searchInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+                            
+                            // Try to find and click the search/submit button
+                            setTimeout(() => {
+                                const buttons = document.querySelectorAll('#storelocatorwidget button');
+                                buttons.forEach(btn => {
+                                    if (btn.type === 'submit' || btn.textContent.includes('Search') || btn.textContent.includes('Find')) {
+                                        console.log('Clicking search button');
+                                        btn.click();
+                                    }
+                                });
+                            }, 300);
+                            
+                            clearInterval(trySearch);
+                        } else if (attempts >= maxAttempts) {
+                            console.log('Could not find search input after', maxAttempts, 'attempts');
+                            clearInterval(trySearch);
+                        }
+                    }, 500);
                 }
-            }, 2000); // Wait 2 seconds for widget to fully load
+            }, 2000);
         });
     </script>
 </body>
