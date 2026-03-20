@@ -638,6 +638,9 @@
                 
                 churchData = await response.json();
                 
+                // Make churchData globally accessible for map
+                window.churchData = churchData;
+                
                 // Determine mode based on URL or data
                 if (mode === 'edit') {
                     showEditMode();
