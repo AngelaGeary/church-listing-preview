@@ -33,6 +33,8 @@ exports.handler = async (event, context) => {
     const searchUrl = `https://api.storelocatorwidgets.com:443/searchByAddress/${encodeURIComponent(searchTerm)}?api_key=${STORE_LOCATOR_API_KEY}&max_results=20`;
     
     console.log('Searching Store Locator for:', searchTerm);
+    console.log('Full URL (with key partially hidden):', searchUrl.replace(STORE_LOCATOR_API_KEY, 'KEY_HIDDEN'));
+    console.log('API key length:', STORE_LOCATOR_API_KEY ? STORE_LOCATOR_API_KEY.length : 'undefined');
     
     const response = await fetch(searchUrl);
     
@@ -46,8 +48,14 @@ exports.handler = async (event, context) => {
 
     const data = await response.json();
     
+    console.log('API response type:', Array.isArray(data) ? 'array' : 'object');
+    console.log('API response length:', data.length);
+    
+    // API returns an array directly, not {locations: [...]}
+    const locations = Array.isArray(data) ? data : [];
+    
     // Check if we got results
-    if (!data.locations || data.locations.length === 0) {
+    if (!locations || locations.length === 0) {
       return {
         statusCode: 404,
         body: JSON.stringify({ 
@@ -59,10 +67,10 @@ exports.handler = async (event, context) => {
     }
 
     // If we have a church name, filter results to find exact match
-    let location = data.locations[0]; // Default to first result
+    let location = locations[0]; // Default to first result
     
     if (churchName) {
-      const exactMatch = data.locations.find(loc => 
+      const exactMatch = locations.find(loc => 
         loc.name && loc.name.toLowerCase().includes(churchName.toLowerCase())
       );
       
