@@ -551,9 +551,16 @@
                         </div>
                     </div>
                     
-                    <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-size: 0.8em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+                    <!-- Church details below map -->
+                    <div id="church-map-details"></div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.85em; color: #856404; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
+                        ℹ️ <strong>Note:</strong> Changes you make will appear in the Church Finder within a few hours
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-size: 0.8em; color: #6b7280; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
                         💡 See the full finder at 
-                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #2563eb; text-decoration: none;">evangelical-times.org/churches</a>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027; text-decoration: none;">evangelical-times.org/churches</a>
                     </div>
                 </div>
             </div>
@@ -1114,21 +1121,25 @@
                 
                 console.log('📍 Adding marker...');
                 
-                // Add marker
-                churchMarker = L.marker([location.lat, location.lng]).addTo(churchMap);
+                // Create custom red marker icon to match Church Finder
+                const redIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
                 
-                // Create popup content with ET branding
+                // Add marker with red icon
+                churchMarker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(churchMap);
+                
+                // Simplified popup - just church name and contact
                 const popupContent = `
-                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; max-width: 280px; font-size: 12px;">
-                        <h3 style="margin: 0 0 10px 0; color: #d12027; font-size: 16px; font-weight: 600; border-bottom: 2px solid #d12027; padding-bottom: 8px;">${location.name}</h3>
-                        <p style="margin: 0 0 8px 0; color: #333; font-size: 12px; line-height: 1.5;">${location.address}</p>
-                        ${location.Contact ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Contact:</strong> ${location.Contact}</p>` : ''}
-                        ${location.phone ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Phone:</strong> <a href="tel:${location.phone}" style="color: #d12027; text-decoration: none;">${location.phone}</a></p>` : ''}
-                        ${location.email ? `<p style="margin: 0 0 6px 0; font-size: 12px;"><strong>Email:</strong> <a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
-                        ${location.Meetings ? `<p style="margin: 8px 0 6px 0; font-size: 12px; line-height: 1.4;">${location.Meetings.replace(/\n/g, '<br>')}</p>` : ''}
-                        ${location.Bibles ? `<p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">${location.Bibles}</p>` : ''}
-                        ${location['Hymn books'] ? `<p style="margin: 0 0 6px 0; font-size: 11px; color: #666;">${location['Hymn books']}</p>` : ''}
-                        ${location.website ? `<p style="margin: 8px 0 0 0; font-size: 12px;"><a href="${location.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px;">
+                        <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 16px; font-weight: 600;">${location.name}</h3>
+                        <p style="margin: 0 0 6px 0; color: #666; font-size: 12px;">${location.Contact || 'Pastor Thomas Yates'}</p>
+                        <p style="margin: 0; font-size: 12px;"><a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>
                     </div>
                 `;
                 
@@ -1139,6 +1150,26 @@
                 }).openPopup();
                 
                 console.log('✅ Map fully loaded!');
+                
+                // Add detailed info box below map (matching Church Finder list view)
+                const infoBox = document.getElementById('church-map-details');
+                if (infoBox) {
+                    infoBox.innerHTML = `
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px;">
+                            <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px;">
+                                <a href="${location.website || '#'}" target="_blank" style="color: #d12027; text-decoration: none;">${location.name}</a>
+                            </h3>
+                            <p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${location.address}</p>
+                            <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${location.Contact || 'Pastor Thomas Yates'}</p>
+                            ${location.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="mailto:${location.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                            ${location.phone ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><a href="tel:${location.phone}" style="color: #d12027; text-decoration: none;">${location.phone}</a></p>` : ''}
+                            ${location.Meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${location.Meetings.replace(/; /g, '<br>')}</p>` : ''}
+                            ${location.Bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${location.Bibles}</p>` : ''}
+                            ${location['Hymn books'] ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${location['Hymn books']}</p>` : ''}
+                            ${location.website ? `<p style="margin: 0; font-size: 14px;"><a href="${location.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                        </div>
+                    `;
+                }
                 
             } catch (error) {
                 console.error('❌ Error loading church map:', error);
