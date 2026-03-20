@@ -1040,8 +1040,9 @@
         }
     </script>
     
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dN3swNcg7g&libraries=places"></script>
+    <!-- Leaflet (OpenStreetMap) for ExpressMaps compatibility -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Church Finder Map -->
     <script>
@@ -1081,41 +1082,25 @@
                 
                 console.log('✅ Church location data:', location);
                 
-                // Check if Google Maps is loaded
-                if (typeof google === 'undefined' || !google.maps) {
-                    console.error('❌ Google Maps not loaded');
-                    throw new Error('Google Maps API not loaded');
-                }
+                console.log('🗺️ Initializing Leaflet Map...');
                 
-                console.log('🗺️ Initializing Google Map...');
-                
-                // Initialize Google Map
+                // Initialize Leaflet Map (OpenStreetMap - same as ExpressMaps)
                 const mapElement = document.getElementById('church-map');
                 
-                churchMap = new google.maps.Map(mapElement, {
-                    center: { lat: location.lat, lng: location.lng },
-                    zoom: 15,
-                    styles: [
-                        {
-                            featureType: 'poi',
-                            elementType: 'labels',
-                            stylers: [{ visibility: 'off' }]
-                        }
-                    ]
-                });
+                churchMap = L.map(mapElement).setView([location.lat, location.lng], 15);
+                
+                // Add OpenStreetMap tiles (same as ExpressMaps)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(churchMap);
                 
                 console.log('📍 Adding marker...');
                 
                 // Add marker
-                churchMarker = new google.maps.Marker({
-                    position: { lat: location.lat, lng: location.lng },
-                    map: churchMap,
-                    title: location.name,
-                    animation: google.maps.Animation.DROP
-                });
+                churchMarker = L.marker([location.lat, location.lng]).addTo(churchMap);
                 
-                // Create info window
-                const infoContent = `
+                // Create popup content
+                const popupContent = `
                     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 250px;">
                         <h3 style="margin: 0 0 8px 0; color: #1B3A5C; font-size: 1.1em;">${location.name}</h3>
                         <p style="margin: 0 0 6px 0; color: #6b7280; font-size: 0.9em;">${location.address}</p>
@@ -1124,19 +1109,10 @@
                     </div>
                 `;
                 
-                const infoWindow = new google.maps.InfoWindow({
-                    content: infoContent
-                });
-                
-                // Open info window by default
-                infoWindow.open(churchMap, churchMarker);
+                // Bind and open popup
+                churchMarker.bindPopup(popupContent).openPopup();
                 
                 console.log('✅ Map fully loaded!');
-                
-                // Re-open on marker click
-                churchMarker.addListener('click', () => {
-                    infoWindow.open(churchMap, churchMarker);
-                });
                 
             } catch (error) {
                 console.error('❌ Error loading church map:', error);
