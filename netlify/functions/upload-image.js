@@ -35,7 +35,8 @@ exports.handler = async (event, context) => {
     const timestamp = Math.round(Date.now() / 1000);
     const publicId = `church-images/${recordId}`;
     
-    const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
+    // Cloudinary requires params to be sorted alphabetically
+    const paramsToSign = `overwrite=true&public_id=${publicId}&timestamp=${timestamp}`;
     const signature = crypto
       .createHash('sha1')
       .update(paramsToSign + CLOUDINARY_API_SECRET)
