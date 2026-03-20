@@ -77,7 +77,11 @@ exports.handler = async (event, context) => {
         bibles: fields['Bibles'] || '',
         hymnBooks: fields['Hymn books'] || '',
         meetings: fields['Meetings'] || '',
-        churchImage: fields['Church image'] ? fields['Church image'][0]?.url : null
+        notes: fields['Notes'] || '',
+        churchImage: fields['Church image'] ? fields['Church image'][0]?.url : null,
+        billingName: fields['Billing name (from Holiday church purchases 2026)'] ? fields['Billing name (from Holiday church purchases 2026)'][0] : null,
+        listingType: fields['Listing type (from Holiday church purchases 2026)'] ? fields['Listing type (from Holiday church purchases 2026)'][0] : null,
+        included2026: fields['Included 2026'] || ''
       })
     };
 
@@ -89,4 +93,3 @@ exports.handler = async (event, context) => {
     };
   }
 };
-
