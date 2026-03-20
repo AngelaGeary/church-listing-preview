@@ -1156,21 +1156,25 @@
                 const infoBox = document.getElementById('church-map-details');
                 if (infoBox) {
                     const imageHtml = window.churchData.churchImage ? 
-                        `<img src="${window.churchData.churchImage}" style="width: 240px; float: left; padding-right: 15px; margin-bottom: 15px; margin-top: 15px; border-radius: 8px;">` : 
+                        `<div style="width: 180px; float: left; margin-right: 20px;">
+                            <img src="${window.churchData.churchImage}" style="width: 100%; border-radius: 8px; display: block;">
+                         </div>` : 
                         '';
                     
                     infoBox.innerHTML = `
-                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px; overflow: auto;">
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px; display: flex; gap: 20px;">
                             ${imageHtml}
-                            <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px; font-weight: 600;">${window.churchData.church}</h3>
-                            <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.address}</p>
-                            ${window.churchData.contact ? `<p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.contact}</p>` : ''}
-                            ${window.churchData.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;">✉️ <a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
-                            ${window.churchData.phone ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="tel:${window.churchData.phone}" style="color: #d12027; text-decoration: none;">${window.churchData.phone}</a></p>` : ''}
-                            ${window.churchData.meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${window.churchData.meetings.replace(/; /g, '<br>')}</p>` : ''}
-                            ${window.churchData.bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${window.churchData.bibles}</p>` : ''}
-                            ${window.churchData.hymnBooks ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${window.churchData.hymnBooks}</p>` : ''}
-                            ${window.churchData.website ? `<p style="margin: 0; font-size: 14px;">🌐 <a href="${window.churchData.website.startsWith('http') ? window.churchData.website : 'https://' + window.churchData.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px; font-weight: 600;">${window.churchData.church}</h3>
+                                <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.address}</p>
+                                ${window.churchData.contact ? `<p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.contact}</p>` : ''}
+                                ${window.churchData.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;">✉️ <a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                                ${window.churchData.phone ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="tel:${window.churchData.phone}" style="color: #d12027; text-decoration: none;">${window.churchData.phone}</a></p>` : ''}
+                                ${window.churchData.meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${window.churchData.meetings.replace(/; /g, '<br>')}</p>` : ''}
+                                ${window.churchData.bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${window.churchData.bibles}</p>` : ''}
+                                ${window.churchData.hymnBooks ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${window.churchData.hymnBooks}</p>` : ''}
+                                ${window.churchData.website ? `<p style="margin: 0; font-size: 14px;">🌐 <a href="${window.churchData.website.startsWith('http') ? window.churchData.website : 'https://' + window.churchData.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                            </div>
                         </div>
                     `;
                 }
