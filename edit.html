@@ -1061,7 +1061,16 @@
                 console.log('📡 Fetching church location from API...');
                 
                 // Fetch church location from Store Locator API
-                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(window.churchData.church)}`);
+                // Pass both church name and address for better matching
+                const searchParams = new URLSearchParams({
+                    church: window.churchData.church
+                });
+                
+                if (window.churchData.address) {
+                    searchParams.append('address', window.churchData.address);
+                }
+                
+                const response = await fetch(`/.netlify/functions/get-church-location?${searchParams}`);
                 
                 console.log('Response status:', response.status);
                 
