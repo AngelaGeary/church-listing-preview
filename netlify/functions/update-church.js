@@ -31,10 +31,21 @@ exports.handler = async (event, context) => {
 
     // Automatically add timestamp and checkbox when user edits
     const updatedFields = {
-      ...fields,
-      'Edited': new Date().toISOString(),
-      'User has edited': true
+      ...fields
     };
+    
+    // Only add these if not already in the fields being updated
+    if (!updatedFields['Edited']) {
+      // Format date for Airtable: YYYY-MM-DD
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      updatedFields['Edited'] = `${year}-${month}-${day}`;
+    }
+    if (!updatedFields['User has edited']) {
+      updatedFields['User has edited'] = true;
+    }
 
     // Update the record in Airtable
     const response = await fetch(
