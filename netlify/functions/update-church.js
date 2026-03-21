@@ -29,6 +29,13 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Automatically add timestamp and checkbox when user edits
+    const updatedFields = {
+      ...fields,
+      'Edited': new Date().toISOString(),
+      'User has edited': true
+    };
+
     // Update the record in Airtable
     const response = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${recordId}`,
@@ -38,7 +45,7 @@ exports.handler = async (event, context) => {
           'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ fields })
+        body: JSON.stringify({ fields: updatedFields })
       }
     );
 
