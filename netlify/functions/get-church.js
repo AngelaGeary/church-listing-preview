@@ -1,98 +1,1513 @@
-// Serverless function to fetch church data from Airtable
-// This keeps your API key secure and handles CORS
-
-exports.handler = async (event, context) => {
-  // Only allow GET requests
-  if (event.httpMethod !== 'GET') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
-  // Get the record ID from query parameters
-  const recordId = event.queryStringParameters?.id;
-  
-  if (!recordId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing record ID' })
-    };
-  }
-
-  // Airtable configuration from environment variables
-  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-  const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appSE6JqFAzvuFCoP';
-  const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME || 'Churches';
-
-  if (!AIRTABLE_API_KEY) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'API key not configured' })
-    };
-  }
-
-  try {
-    // Fetch the church record from Airtable
-    const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${recordId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Edit Your Church Listing - ET Holiday Church 2026</title>
+    <link rel="stylesheet" href="listings.css">
+    <style>
+        /* ET Branded styles */
+        body {
+            background: #f5f5f5;
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
         }
-      }
-    );
+        
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .et-header {
+            background: linear-gradient(135deg, #1B3A5C 0%, #2c5282 100%);
+            padding: 30px 40px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .et-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
+        
+        .et-logo img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .et-header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #C9A961;
+            text-transform: uppercase;
+        }
+        
+        .et-header h2 {
+            margin: 10px 0 0 0;
+            font-size: 1.3em;
+            font-weight: normal;
+            color: white;
+        }
+        
+        /* Thank you banner for post-purchase */
+        .thank-you-banner {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            display: none;
+            margin-bottom: 0;
+        }
+        
+        .thank-you-banner.show {
+            display: block;
+        }
+        
+        .thank-you-banner h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.6em;
+        }
+        
+        .thank-you-banner p {
+            margin: 5px 0;
+            font-size: 1.05em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        .thank-you-banner .checkmark {
+            display: inline-block;
+            color: #C8E6C9;
+        }
+        
+        /* Instructions banner between thank you and edit area */
+        .instructions-banner {
+            background: #f9fafb;
+            padding: 20px 40px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            display: none;
+        }
+        
+        .instructions-banner.show {
+            display: block;
+        }
+        
+        .instructions-banner p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.95em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        /* Split screen layout for edit mode */
+        .split-container {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            padding: 32px;
+            background: white;
+            margin: 0 20px 40px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .split-container.show {
+            display: grid;
+        }
+        
+        .edit-panel h3 {
+            color: #1B3A5C;
+            margin-top: 0;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;
+        }
+        
+        .preview-panel h3 {
+            color: #1B3A5C;
+            margin-top: 0;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif;
+        }
+        
+        /* Form styling - Mac-like */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #1B3A5C;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-size: 0.9em;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="url"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-group input:read-only {
+            background: #f9fafb;
+            color: #6b7280;
+        }
+        
+        .form-group textarea {
+            min-height: 90px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            color: #6b7280;
+            font-size: 0.85em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        .form-group .warning {
+            color: #dc2626;
+            font-weight: 500;
+        }
+        
+        .char-count {
+            font-size: 0.8em;
+            color: #9ca3af;
+            float: right;
+            font-weight: 400;
+        }
+        
+        .save-button {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(180deg, #34a853 0%, #2d8e47 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 2px 8px rgba(52, 168, 83, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .save-button:hover {
+            background: linear-gradient(180deg, #2d8e47 0%, #267038 100%);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .save-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(52, 168, 83, 0.3);
+        }
+        
+        .save-button:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        /* Marketing mode */
+        .marketing-container {
+            display: none;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .marketing-container.show {
+            display: block;
+        }
+        
+        .marketing-headline {
+            text-align: center;
+            color: #1B3A5C;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .marketing-subheadline {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .preview-box {
+            margin: 30px 0;
+        }
+        
+        .pricing-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .pricing-card {
+            border: 3px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            border-color: #2c5282;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .pricing-card.popular {
+            border-color: #C9A961;
+            background: #FFFEF8;
+        }
+        
+        .pricing-card h4 {
+            color: #1B3A5C;
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+        
+        .pricing-card .price {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #d12027;
+            margin: 10px 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .pricing-card .popular-badge {
+            background: #C9A961;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .book-button {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            background: #d12027;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            font-family: Arial, sans-serif;
+        }
+        
+        .book-button:hover {
+            background: #a01820;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(209, 32, 39, 0.3);
+        }
+        
+        .deadline-notice {
+            text-align: center;
+            background: #FFF3E0;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 6px;
+            border-left: 4px solid #FF9800;
+        }
+        
+        .deadline-notice strong {
+            color: #E65100;
+            font-size: 1.2em;
+        }
+        
+        /* Loading and success states */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            border: 1px solid rgba(6, 95, 70, 0.1);
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .unsaved-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid rgba(146, 64, 14, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        /* Preview Type Toggle Buttons */
+        .preview-toggle {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 30px 0 20px 0;
+        }
 
-    if (!response.ok) {
-      console.error('Airtable API error:', response.status, await response.text());
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ error: 'Failed to fetch church data from Airtable' })
-      };
-    }
+        .preview-toggle button {
+            padding: 12px 24px;
+            border: 2px solid #d12027;
+            background: white;
+            color: #d12027;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
 
-    const data = await response.json();
+        .preview-toggle button:hover {
+            background: #fff5f5;
+        }
+
+        .preview-toggle button.active {
+            background: #d12027;
+            color: white;
+        }
+
+        /* Online vs Print Stats Box */
+        .stats-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .stats-box h3 {
+            color: #075985;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #0284c7;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #0284c7;
+            margin: 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0 0 0;
+        }
+
+        /* Marketing Church Finder Section */
+        .marketing-church-finder {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .marketing-church-finder h3 {
+            color: #1B3A5C;
+            margin: 0 0 20px 0;
+            font-size: 1.3em;
+        }
+        
+        /* Responsive */
+        @media (max-width: 900px) {
+            .split-container {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Move preview to top on mobile */
+            .preview-panel {
+                order: -1;
+            }
+            
+            .pricing-options {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Marketing mode responsive */
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .preview-toggle {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .preview-toggle button {
+                width: 100%;
+                padding: 14px;
+            }
+            
+            .marketing-headline {
+                font-size: 1.5em;
+            }
+            
+            .marketing-church-finder {
+                padding: 20px;
+            }
+            
+            #marketing-map {
+                height: 300px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="et-header">
+            <div class="et-logo">
+                <img src="et-logo.png" alt="Evangelical Times">
+            </div>
+            <h1>Evangelical Times Holiday Churches 2026</h1>
+            <h2 id="page-title">Loading...</h2>
+        </div>
+
+        <!-- Thank you banner (post-purchase only) -->
+        <div class="thank-you-banner" id="thank-you-banner">
+            <h3>Thank you, <span id="billing-name"></span>!</h3>
+            <p><span class="checkmark">✓</span> Your <strong id="listing-type-name"></strong> listing is confirmed</p>
+            <p><span class="checkmark">✓</span> Included in <strong id="edition-name"></strong></p>
+        </div>
+
+        <!-- Instructions banner -->
+        <div class="instructions-banner" id="instructions-banner">
+            <p>Review and update your church details below. Changes are saved to your listing.</p>
+        </div>
+
+        <!-- Edit mode (post-purchase) -->
+        <div class="split-container" id="edit-container">
+            <div class="edit-panel">
+                <h3>Edit Your Details</h3>
+                
+                <form id="edit-form">
+                    <div class="form-group">
+                        <label>Church Name</label>
+                        <input type="text" id="church" readonly style="background: #f5f5f5;">
+                        <small>Contact us to change your church name</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address <span class="char-count" id="address-count"></span></label>
+                        <input type="text" id="address" maxlength="200">
+                        <small class="warning">⚠️ Use standard address format for mapping to work correctly</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Service Times / Meetings <span class="char-count" id="meetings-count"></span></label>
+                        <textarea id="meetings" maxlength="500"></textarea>
+                        <small>Press Enter for line breaks</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Contact Person <span class="char-count" id="contact-count"></span></label>
+                        <input type="text" id="contact" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone <span class="char-count" id="phone-count"></span></label>
+                        <input type="text" id="phone" maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email <span class="char-count" id="email-count"></span></label>
+                        <input type="email" id="email" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Bible Version <span class="char-count" id="bibles-count"></span></label>
+                        <input type="text" id="bibles" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Hymnbook <span class="char-count" id="hymnbooks-count"></span></label>
+                        <input type="text" id="hymnbooks" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Website <span class="char-count" id="website-count"></span></label>
+                        <input type="url" id="website" maxlength="100">
+                        <small>e.g., www.yourchurch.org.uk</small>
+                    </div>
+                    
+                    <div class="form-group" id="image-upload-group" style="display: none;">
+                        <label>Church Image</label>
+                        <div style="margin-bottom: 10px;">
+                            <img id="current-image" src="" alt="Current church image" style="max-width: 200px; max-height: 150px; border-radius: 8px; display: none; margin-bottom: 10px;">
+                        </div>
+                        <input type="file" id="church-image" accept="image/*" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px;">
+                        <small>Upload a new photo for your Photo listing (JPG, PNG, max 5MB)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes <span class="char-count" id="notes-count"></span></label>
+                        <textarea id="notes" maxlength="200"></textarea>
+                        <small>Directions, parking info, etc. (Brief notes only)</small>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="preview-panel">
+                <h3>Live Preview</h3>
+                <p style="color: #666; font-family: Arial, sans-serif; font-size: 0.95em; margin-bottom: 20px;">
+                    This updates as you type
+                </p>
+                
+                <div class="success-message" id="success-message-preview">
+                    ✓ Changes saved successfully!
+                </div>
+                
+                <div class="unsaved-warning" id="unsaved-warning" style="display: none;">
+                    ⚠️ You have unsaved changes
+                </div>
+                
+                <div id="live-preview">
+                    <div class="loading">Loading preview...</div>
+                </div>
+                
+                <button type="button" class="save-button" id="save-button-preview" onclick="document.getElementById('edit-form').dispatchEvent(new Event('submit'))">
+                    Save Changes
+                </button>
+                
+                <!-- Church Finder Map Preview in same column -->
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #d12027;">
+                    <h4 style="color: #d12027; margin: 0 0 8px 0; font-size: 1.1em; font-weight: 600; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
+                        Church Finder Preview
+                    </h4>
+                    <p style="color: #6b7280; font-size: 0.85em; margin-bottom: 12px; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
+                        How you appear on our church finder
+                    </p>
+                    
+                    <div id="church-map" style="width:100%; height: 450px; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; background: #f9fafb;">
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #9ca3af;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">🗺️</div>
+                                <div>Loading map...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Church details below map -->
+                    <div id="church-map-details"></div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.85em; color: #856404; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
+                        ℹ️ <strong>Note:</strong> Changes you make will appear in the Church Finder within a few hours
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-size: 0.8em; color: #6b7280; font-family: 'Roboto', Helvetica, Arial, sans-serif;">
+                        💡 See the full finder at 
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027; text-decoration: none;">evangelical-times.org/churches</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Store Locator Container - REMOVED, replaced with custom map -->
+        <div class="store-locator-container" id="store-locator-container" style="display: none;">
+            <!-- Replaced with custom Google Map -->
+        </div>
+
+        <!-- Marketing mode (pre-purchase) -->
+        <div class="marketing-container" id="marketing-container">
+            <!-- Personalized Greeting -->
+            <div style="margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7; border-radius: 8px;">
+                <p style="margin: 0; color: #1B3A5C; font-size: 1.1em;" id="marketing-greeting">
+                    Hello! 👋
+                </p>
+            </div>
+            
+            <h2 class="marketing-headline">Your church is reaching 20,000+ online searchers...</h2>
+            <p class="marketing-subheadline">Now reach 7,000+ ET Newspaper readers with a Holiday Church listing</p>
+            
+            <!-- Stats Box -->
+            <div class="stats-box">
+                <h3>✓ You're already listed in our Church Finder</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <p class="stat-number">20,000+</p>
+                        <p class="stat-label">Monthly Online Searches</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="stat-number">7,000+</p>
+                        <p class="stat-label">ET Newspaper Readers</p>
+                    </div>
+                </div>
+                <p style="margin: 15px 0 0 0; color: #075985; font-size: 0.95em;">
+                    After booking, we'll send you a link to review and update your listing details
+                </p>
+            </div>
+            
+            <!-- Preview Toggle Buttons -->
+            <div class="preview-toggle">
+                <button onclick="switchPreviewType('standard')" id="toggle-standard">Standard</button>
+                <button onclick="switchPreviewType('enhanced')" id="toggle-enhanced" class="active">Enhanced</button>
+                <button onclick="switchPreviewType('photo')" id="toggle-photo">Photo</button>
+            </div>
+            
+            <div class="preview-box" id="marketing-preview">
+                <div class="loading">Loading preview...</div>
+            </div>
+            
+            <!-- Pricing Options - MOVED UP -->
+            <div class="pricing-options">
+                <div class="pricing-card">
+                    <h4>Standard</h4>
+                    <div class="price">£32</div>
+                    <p style="color: #666; margin: 15px 0;">Essential church listing</p>
+                    <a href="https://book.stripe.com/4gw3cdf7afor7846pW" class="book-button" target="_blank">
+                        Book Standard →
+                    </a>
+                </div>
+                
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Most Popular</div>
+                    <h4>Enhanced</h4>
+                    <div class="price">£42</div>
+                    <p style="color: #666; margin: 15px 0;">Stand out with centered layout</p>
+                    <a href="https://book.stripe.com/8wMbIJcZ2gsv8c84hN" class="book-button" target="_blank">
+                        Book Enhanced →
+                    </a>
+                </div>
+                
+                <div class="pricing-card">
+                    <h4>Photo</h4>
+                    <div class="price">£52</div>
+                    <p style="color: #666; margin: 15px 0;">Include your church photo</p>
+                    <a href="https://book.stripe.com/28ofYZaQU6RVgIEaGa" class="book-button" target="_blank">
+                        Book Photo →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="deadline-notice">
+                <strong>Booking Deadline:</strong> Monday 4th May 2026
+            </div>
+            
+            <!-- Church Finder Preview - MOVED DOWN -->
+            <div class="marketing-church-finder">
+                <h3>📍 How you appear in our Church Finder</h3>
+                <div id="marketing-map" style="height: 400px; border-radius: 8px; margin-bottom: 15px;"></div>
+                <div class="map-info-box" id="marketing-map-info">
+                    <div class="loading">Loading church location...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        const recordId = getUrlParameter('id');
+        const mode = getUrlParameter('mode'); // 'edit' or 'preview'
+        
+        let churchData = null;
+        let listingType = 'standard';
+
+        // Initialize page on load
+        window.addEventListener('DOMContentLoaded', initializePage);
+
+        async function initializePage() {
+            if (!recordId) {
+                document.getElementById('page-title').textContent = '❌ Missing Record ID';
+                return;
+            }
+
+            try {
+                // Fetch church data
+                const response = await fetch(`/.netlify/functions/get-church?id=${recordId}`);
+                if (!response.ok) throw new Error('Failed to load church data');
+                
+                churchData = await response.json();
+                
+                // Make churchData globally accessible for map
+                window.churchData = churchData;
+                
+                // Determine mode based on URL or data
+                if (mode === 'edit') {
+                    showEditMode();
+                } else if (mode === 'preview') {
+                    showMarketingMode();
+                } else {
+                    // Auto-detect: if they have Included 2026 = YES, show edit mode
+                    // For now, we'll just show the mode based on the URL parameter
+                    // You can add logic here to check Airtable fields
+                    showMarketingMode(); // Default to marketing
+                }
+                
+            } catch (error) {
+                console.error('Error loading page:', error);
+                document.getElementById('page-title').textContent = '❌ Error Loading Data';
+            }
+        }
+
+        function showEditMode() {
+            document.getElementById('page-title').textContent = 'Edit Your Listing';
+            document.getElementById('thank-you-banner').classList.add('show');
+            document.getElementById('instructions-banner').classList.add('show');
+            document.getElementById('edit-container').classList.add('show');
+            
+            // Populate thank you banner with actual data
+            document.getElementById('billing-name').textContent = churchData.billingName || 'Church Administrator';
+            document.getElementById('listing-type-name').textContent = churchData.listingType || 'Standard';
+            document.getElementById('edition-name').textContent = churchData.included2026 === 'YES' ? 'June 2026 edition' : 'Upcoming edition';
+            
+            // Populate form
+            populateForm();
+            
+            // Setup live preview
+            setupLivePreview();
+            
+            // Setup form submission
+            document.getElementById('edit-form').addEventListener('submit', handleSave);
+            
+            // Initialize church map AFTER data is loaded
+            setTimeout(initChurchMap, 500);
+        }
+
+        function showMarketingMode() {
+            document.getElementById('page-title').textContent = 'Preview Your Listing';
+            document.getElementById('marketing-container').classList.add('show');
+            
+            // Set personalized greeting - use marketingName (from direct Churches field)
+            // Fallback chain: marketingName → Contact → Hello
+            const greetingEl = document.getElementById('marketing-greeting');
+            if (churchData.marketingName) {
+                greetingEl.textContent = `Hello ${churchData.marketingName} 👋`;
+            } else if (churchData.contact) {
+                greetingEl.textContent = `Hello ${churchData.contact} 👋`;
+            } else {
+                greetingEl.textContent = 'Hello 👋';
+            }
+            
+            // Set initial preview type to Enhanced
+            window.marketingPreviewType = 'enhanced';
+            
+            // Generate preview
+            generatePreview('marketing-preview');
+            
+            // Initialize marketing map AFTER data is loaded
+            setTimeout(initMarketingMap, 500);
+        }
+        
+        // Switch preview type in marketing mode
+        function switchPreviewType(type) {
+            window.marketingPreviewType = type;
+            
+            // Update button states
+            document.querySelectorAll('.preview-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('toggle-' + type).classList.add('active');
+            
+            // Regenerate preview
+            generatePreview('marketing-preview');
+        }
+        
+        // Initialize map for marketing mode
+        async function initMarketingMap() {
+            console.log('🗺️ Marketing mode: Starting map initialization...');
+            console.log('Church data:', churchData);
+            
+            if (!churchData || !churchData.church) {
+                console.error('❌ No church data available for map');
+                document.getElementById('marketing-map').style.display = 'none';
+                document.getElementById('marketing-map-info').innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Your church is in our Church Finder.<br>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027;">View Church Finder →</a>
+                    </p>
+                `;
+                return;
+            }
+            
+            try {
+                console.log('📡 Fetching church location from API...');
+                
+                // Use same search strategy as edit mode
+                const searchTerm = churchData.address || churchData.countyOrCity || churchData.church;
+                console.log('Searching Store Locator for:', searchTerm);
+                
+                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(searchTerm)}&name=${encodeURIComponent(churchData.church)}`);
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API response error:', errorText);
+                    throw new Error('Failed to fetch church location');
+                }
+                
+                const data = await response.json();
+                const location = data.location; // KEY FIX: Use data.location like edit mode
+                
+                console.log('✅ Church location data:', location);
+                
+                if (location && location.lat && location.lng) {
+                    console.log('🗺️ Initializing Leaflet Map...');
+                    
+                    // Initialize Leaflet map (same as edit mode)
+                    const map = L.map('marketing-map').setView([location.lat, location.lng], 15);
+                    
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    
+                    // Create custom red marker (same as edit mode)
+                    const redIcon = L.icon({
+                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwLjYgMTIuNSAyOC41IDEyLjUgMjguNVMyNSAyMy4xIDI1IDEyLjVDMjUgNS42IDE5LjQgMCAxMi41IDB6bTAgMTcuNWMtMi44IDAtNS0yLjItNS01czIuMi01IDUtNSA1IDIuMiA1IDUtMi4yIDUtNSA1eiIgZmlsbD0iI2QxMjAyNyIvPjwvc3ZnPg==',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34]
+                    });
+                    
+                    const marker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(map);
+                    
+                    // Simplified popup
+                    const meetings = churchData.meetings ? churchData.meetings.split('\n')[0] : '';
+                    const popupContent = `
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
+                            <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${churchData.church}</h3>
+                            <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${churchData.contact || ''}</p>
+                            ${churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                            ${meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${meetings}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent, {
+                        maxWidth: 300,
+                        className: 'et-church-popup'
+                    }).openPopup();
+                    
+                    console.log('✅ Map fully loaded!');
+                    
+                    // Show info box (same style as edit mode)
+                    const infoBox = document.getElementById('marketing-map-info');
+                    const imageHtml = churchData.churchImage ? 
+                        `<div style="flex: 0 0 180px;"><img src="${churchData.churchImage}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : '';
+                    
+                    infoBox.innerHTML = `
+                        <div style="display: flex; gap: 20px; align-items: start;">
+                            ${imageHtml}
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 12px 0; color: #1B3A5C; font-size: 1.1em;">${churchData.church}</h4>
+                                <p style="margin: 6px 0; color: #555; line-height: 1.6;"><strong>Address:</strong> ${churchData.address}</p>
+                                ${churchData.contact ? `<p style="margin: 6px 0; color: #555;"><strong>Contact:</strong> ${churchData.contact}</p>` : ''}
+                                ${churchData.phone ? `<p style="margin: 6px 0; color: #555;"><strong>Phone:</strong> ${churchData.phone}</p>` : ''}
+                                ${churchData.email ? `<p style="margin: 6px 0; color: #555;"><strong>Email:</strong> ${churchData.email}</p>` : ''}
+                                ${meetings ? `<p style="margin: 6px 0; color: #555;"><strong>Services:</strong> ${meetings}</p>` : ''}
+                                <div style="margin-top: 16px; padding: 14px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 6px;">
+                                    <p style="margin: 0; color: #075985; font-size: 0.95em; font-weight: 500;">
+                                        ✓ Your church is live in our Church Finder, reaching 20,000+ online searchers monthly
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.warn('No lat/lng in location data');
+                    throw new Error('No location coordinates');
+                }
+                
+            } catch (error) {
+                console.error('Error loading church location:', error);
+                document.getElementById('marketing-map').style.display = 'none';
+                document.getElementById('marketing-map-info').innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Your church is in our Church Finder.<br>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027;">View Church Finder →</a>
+                    </p>
+                `;
+            }
+        }
+
+        function populateForm() {
+            document.getElementById('church').value = churchData.church || '';
+            document.getElementById('address').value = churchData.address || '';
+            document.getElementById('meetings').value = churchData.meetings || '';
+            document.getElementById('contact').value = churchData.contact || '';
+            document.getElementById('phone').value = churchData.phone || '';
+            document.getElementById('email').value = churchData.email || '';
+            document.getElementById('bibles').value = churchData.bibles || '';
+            document.getElementById('hymnbooks').value = churchData.hymnBooks || '';
+            document.getElementById('website').value = churchData.website || '';
+            document.getElementById('notes').value = churchData.notes || '';
+            
+            // Show image upload for Photo listings
+            const listingType = (churchData.listingType || 'standard').toLowerCase();
+            if (listingType === 'photo') {
+                document.getElementById('image-upload-group').style.display = 'block';
+                
+                // Show current image if exists
+                if (churchData.churchImage) {
+                    const currentImage = document.getElementById('current-image');
+                    currentImage.src = churchData.churchImage;
+                    currentImage.style.display = 'block';
+                }
+            }
+            
+            // Update character counts
+            updateCharCounts();
+        }
+
+        function setupLivePreview() {
+            // Generate initial preview
+            generatePreview('live-preview');
+            
+            let hasUnsavedChanges = false;
+            
+            // Update preview on any input change
+            const inputs = document.querySelectorAll('#edit-form input, #edit-form textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    updateCharCounts();
+                    generatePreviewFromForm();
+                    
+                    // Show unsaved warning
+                    if (!hasUnsavedChanges) {
+                        hasUnsavedChanges = true;
+                        document.getElementById('unsaved-warning').style.display = 'block';
+                    }
+                });
+            });
+            
+            // Handle image upload
+            const imageUpload = document.getElementById('church-image');
+            if (imageUpload) {
+                imageUpload.addEventListener('change', async function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('Image is too large. Please choose an image under 5MB.');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Show loading state
+                        const currentImage = document.getElementById('current-image');
+                        currentImage.style.opacity = '0.5';
+                        
+                        const reader = new FileReader();
+                        reader.onload = async function(e) {
+                            const imageData = e.target.result;
+                            
+                            // Show preview immediately
+                            currentImage.src = imageData;
+                            currentImage.style.display = 'block';
+                            currentImage.style.opacity = '1';
+                            
+                            // Update live preview
+                            churchData.churchImage = imageData;
+                            generatePreviewFromForm();
+                            
+                            // Store the base64 data for upload on save
+                            window.pendingImageUpload = imageData;
+                            
+                            // Show unsaved warning
+                            if (!hasUnsavedChanges) {
+                                hasUnsavedChanges = true;
+                                document.getElementById('unsaved-warning').style.display = 'block';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // Clear unsaved flag on save
+            window.clearUnsavedFlag = function() {
+                hasUnsavedChanges = false;
+                document.getElementById('unsaved-warning').style.display = 'none';
+            };
+        }
+
+        function updateCharCounts() {
+            const fields = ['address', 'meetings', 'contact', 'phone', 'email', 'bibles', 'hymnbooks', 'website', 'notes'];
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                const count = document.getElementById(`${field}-count`);
+                if (input && count) {
+                    const max = input.getAttribute('maxlength');
+                    count.textContent = `${input.value.length}/${max}`;
+                }
+            });
+        }
+
+        function generatePreviewFromForm() {
+            // Get current form values
+            const formData = {
+                church: document.getElementById('church').value,
+                address: document.getElementById('address').value,
+                meetings: document.getElementById('meetings').value,
+                contact: document.getElementById('contact').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                bibles: document.getElementById('bibles').value,
+                hymnBooks: document.getElementById('hymnbooks').value,
+                website: document.getElementById('website').value,
+                notes: document.getElementById('notes').value,
+                countyOrCity: churchData.countyOrCity || '',
+                churchImage: churchData.churchImage || null
+            };
+            
+            // Determine which listing type to use
+            const type = (churchData.listingType || 'standard').toLowerCase();
+            
+            let html;
+            if (type === 'enhanced') {
+                html = generateEnhancedListing(formData);
+            } else if (type === 'photo') {
+                html = generatePhotoListing(formData);
+            } else {
+                html = generateStandardListing(formData);
+            }
+            
+            document.getElementById('live-preview').innerHTML = html;
+        }
+
+        function generatePreview(containerId) {
+            // For marketing mode, use the selected preview type
+            let type;
+            if (containerId === 'marketing-preview' && window.marketingPreviewType) {
+                type = window.marketingPreviewType;
+            } else {
+                // For edit mode, use actual listing type
+                type = (churchData.listingType || 'standard').toLowerCase();
+            }
+            
+            let html;
+            if (type === 'enhanced') {
+                html = generateEnhancedListing(churchData);
+            } else if (type === 'photo') {
+                html = generatePhotoListing(churchData);
+            } else {
+                html = generateStandardListing(churchData);
+            }
+            
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        // Listing generation functions (copied from index.html)
+        function formatWithLineBreaks(text) {
+            if (!text) return '';
+            return text.replace(/\n/g, '<br>');
+        }
+
+        function generateStandardListing(data) {
+            const cityPrefix = data.countyOrCity ? `${data.countyOrCity}: ` : '';
+            
+            let html = `<div class="standard">`;
+            html += `<div class="church-name">${cityPrefix}${data.church}</div>`;
+            if (data.address) html += `<div class="info-line">${data.address}</div>`;
+            if (data.meetings) html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
+            if (data.contact || data.phone) {
+                let contactLine = '';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            if (data.bibles) html += `<div class="info-line"><strong>V:</strong> ${data.bibles}</div>`;
+            if (data.hymnBooks) html += `<div class="info-line"><strong>HB:</strong> ${data.hymnBooks}</div>`;
+            if (data.email) html += `<div class="info-line"><strong>E:</strong> ${data.email}</div>`;
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            if (data.notes) html += `<div class="info-line"><strong>Notes:</strong> ${data.notes}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function generateEnhancedListing(data) {
+            let html = `<div class="enhanced">`;
+            html += `<div class="church-name">${data.church}</div>`;
+            if (data.address) html += `<div class="info-line">${data.address}</div>`;
+            if (data.meetings) html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
+            if (data.contact || data.phone) {
+                let contactLine = '<strong>Contact:</strong> ';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            if (data.bibles) html += `<div class="info-line"><strong>Bible:</strong> ${data.bibles}</div>`;
+            if (data.hymnBooks) html += `<div class="info-line"><strong>Hymnbook:</strong> ${data.hymnBooks}</div>`;
+            if (data.email) html += `<div class="info-line"><strong>Email:</strong> ${data.email}</div>`;
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            if (data.notes) html += `<div class="info-line"><strong>Notes:</strong> ${data.notes}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function generatePhotoListing(data) {
+            let html = `<div class="photo">`;
+            if (data.churchImage) {
+                html += `<img src="${data.churchImage}" alt="${data.church}" class="church-photo">`;
+            } else {
+                html += `<div style="padding: 15px; background: #f5f5f5; text-align: center; margin-bottom: 8px; border-radius: 8px; font-size: 12px; color: #666;">📷 No photo uploaded yet</div>`;
+            }
+            html += `<div class="church-name">${data.church}</div>`;
+            if (data.address) html += `<div class="info-line">${data.address}</div>`;
+            if (data.meetings) html += `<div class="info-line">${formatWithLineBreaks(data.meetings)}</div>`;
+            if (data.contact || data.phone) {
+                let contactLine = '<strong>Contact:</strong> ';
+                if (data.contact) contactLine += data.contact;
+                if (data.phone) contactLine += ` (tel: ${data.phone})`;
+                html += `<div class="info-line">${contactLine}</div>`;
+            }
+            if (data.bibles) html += `<div class="info-line"><strong>Bible:</strong> ${data.bibles}</div>`;
+            if (data.hymnBooks) html += `<div class="info-line"><strong>Hymnbook:</strong> ${data.hymnBooks}</div>`;
+            if (data.email) html += `<div class="info-line"><strong>Email:</strong> ${data.email}</div>`;
+            if (data.website) {
+                const cleanWebsite = data.website.replace(/^https?:\/\//, '');
+                html += `<div class="info-line"><strong>Website:</strong> <a href="https://${cleanWebsite}" target="_blank">${cleanWebsite}</a></div>`;
+            }
+            if (data.notes) html += `<div class="info-line"><strong>Notes:</strong> ${data.notes}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        async function handleSave(e) {
+            e.preventDefault();
+            
+            const saveButton = document.getElementById('save-button-preview');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            
+            try {
+                // If there's a pending image upload, upload to Cloudinary first
+                let imageUrl = null;
+                if (window.pendingImageUpload) {
+                    saveButton.textContent = 'Uploading image...';
+                    
+                    const uploadResponse = await fetch('/.netlify/functions/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageData: window.pendingImageUpload,
+                            recordId: recordId
+                        })
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        throw new Error('Failed to upload image');
+                    }
+                    
+                    const uploadData = await uploadResponse.json();
+                    imageUrl = uploadData.url;
+                    
+                    // Clear pending upload
+                    window.pendingImageUpload = null;
+                }
+                
+                // Prepare form data
+                const formData = {
+                    'Address': document.getElementById('address').value,
+                    'Meetings': document.getElementById('meetings').value,
+                    'Contact': document.getElementById('contact').value,
+                    'Phone': document.getElementById('phone').value,
+                    'Email': document.getElementById('email').value,
+                    'Bibles': document.getElementById('bibles').value,
+                    'Hymn books': document.getElementById('hymnbooks').value,
+                    'Website': document.getElementById('website').value,
+                    'Notes': document.getElementById('notes').value
+                };
+                
+                // Add image URL if uploaded
+                if (imageUrl) {
+                    formData['Church image'] = [{ url: imageUrl }];
+                }
+                
+                saveButton.textContent = 'Saving details...';
+                
+                // Call Netlify function to update Airtable
+                const response = await fetch(`/.netlify/functions/update-church`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recordId: recordId,
+                        fields: formData
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save');
+                
+                // Update churchData with new image URL if uploaded
+                if (imageUrl) {
+                    churchData.churchImage = imageUrl;
+                }
+                
+                // Show success message
+                document.getElementById('success-message-preview').classList.add('show');
+                window.clearUnsavedFlag();
+                
+                setTimeout(() => {
+                    document.getElementById('success-message-preview').classList.remove('show');
+                }, 5000);
+                
+                saveButton.textContent = '✓ Saved!';
+                setTimeout(() => {
+                    saveButton.textContent = 'Save Changes';
+                    saveButton.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error saving:', error);
+                
+                // Show more specific error message
+                let errorMsg = 'Error saving changes. ';
+                if (error.message.includes('upload')) {
+                    errorMsg += 'Image upload failed. Please check the image file and try again.';
+                } else if (error.message.includes('save')) {
+                    errorMsg += 'Failed to save to database. Please try again.';
+                } else {
+                    errorMsg += 'Please try again. Error: ' + error.message;
+                }
+                
+                alert(errorMsg);
+                console.log('Full error details:', error);
+                
+                saveButton.textContent = 'Save Changes';
+                saveButton.disabled = false;
+            }
+        }
+    </script>
     
-    // Extract the fields we need
-    const fields = data.fields || {};
+    <!-- Leaflet (OpenStreetMap) for ExpressMaps compatibility -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    // Return clean data structure
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Allow CORS
-        'Cache-Control': 'public, max-age=60' // Cache for 1 minute
-      },
-      body: JSON.stringify({
-        id: data.id,
-        church: fields['Church'] || '',
-        address: fields['Address'] || '',
-        countyOrCity: fields['County or city'] || '',
-        email: fields['Email'] || '',
-        website: fields['Website'] || '',
-        contact: fields['Contact'] || '',
-        phone: fields['Phone'] || '',
-        bibles: fields['Bibles'] || '',
-        hymnBooks: fields['Hymn books'] || '',
-        meetings: fields['Meetings'] || '',
-        notes: fields['Notes'] || '',
-        churchImage: fields['Church image'] ? fields['Church image'][0]?.url : null,
-        billingName: fields['Billing name'] || // Direct field (for marketing mode)
-                     (fields['Billing name (from Holiday church purchases 2026)'] ? fields['Billing name (from Holiday church purchases 2026)'][0] : null) ||
-                     (fields['Billing name (from Holiday Church online subscribers only)'] ? fields['Billing name (from Holiday Church online subscribers only)'][0] : null),
-        listingType: fields['Listing type (from Holiday church purchases 2026)'] ? fields['Listing type (from Holiday church purchases 2026)'][0] : 
-                     (fields['Listing type (from Holiday Church online subscribers only)'] ? fields['Listing type (from Holiday Church online subscribers only)'][0] : null),
-        included2026: fields['Included 2026'] || ''
-      })
-    };
-
-  } catch (error) {
-    console.error('Error fetching church data:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error', message: error.message })
-    };
-  }
-};
+    <!-- Custom popup styling to match ET Church Finder -->
+    <style>
+        .et-church-popup .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            border: 1px solid #d12027;
+            box-shadow: 0 3px 14px rgba(209, 32, 39, 0.15);
+        }
+        
+        .et-church-popup .leaflet-popup-tip {
+            border-top-color: #d12027;
+        }
+        
+        .et-church-popup .leaflet-popup-content {
+            margin: 15px;
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+        }
+    </style>
+    
+    <!-- Church Finder Map -->
+    <script>
+        let churchMap = null;
+        let churchMarker = null;
+        
+        async function initChurchMap() {
+            console.log('🗺️ Starting map initialization...');
+            console.log('Church data:', window.churchData);
+            
+            if (!window.churchData || !window.churchData.church) {
+                console.error('❌ No church data available for map');
+                return;
+            }
+            
+            try {
+                console.log('📡 Fetching church location from API...');
+                
+                // Fetch church location from Store Locator API
+                // Try full address first for best results
+                const searchTerm = window.churchData.address || window.churchData.countyOrCity || window.churchData.church;
+                
+                console.log('Searching Store Locator for:', searchTerm);
+                
+                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(searchTerm)}&name=${encodeURIComponent(window.churchData.church)}`);
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API response error:', errorText);
+                    throw new Error('Failed to fetch church location');
+                }
+                
+                const data = await response.json();
+                const location = data.location;
+                
+                console.log('✅ Church location data:', location);
+                
+                console.log('🗺️ Initializing Leaflet Map...');
+                
+                // Initialize Leaflet Map (OpenStreetMap - same as ExpressMaps)
+                const mapElement = document.getElementById('church-map');
+                
+                churchMap = L.map(mapElement).setView([location.lat, location.lng], 15);
+                
+                // Add OpenStreetMap tiles (same as ExpressMaps)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(churchMap);
+                
+                console.log('📍 Adding marker...');
+                
+                // Create custom red marker icon to match Church Finder
+                const redIcon = L.icon({
+                    iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwLjYgMTIuNSAyOC41IDEyLjUgMjguNVMyNSAyMy4xIDI1IDEyLjVDMjUgNS42IDE5LjQgMCAxMi41IDB6bTAgMTcuNWMtMi44IDAtNS0yLjItNS01czIuMi01IDUtNSA1IDIuMiA1IDUtMi4yIDUtNSA1eiIgZmlsbD0iI2QxMjAyNyIvPjwvc3ZnPg==',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                });
+                
+                // Add marker with red icon
+                churchMarker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(churchMap);
+                
+                // Simplified popup using Airtable data
+                const popupContent = `
+                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
+                        <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${window.churchData.church}</h3>
+                        <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${window.churchData.contact || ''}</p>
+                        ${window.churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                        ${window.churchData.meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${window.churchData.meetings.split(';')[0].trim()}</p>` : ''}
+                    </div>
+                `;
+                
+                // Bind and open popup
+                churchMarker.bindPopup(popupContent, {
+                    maxWidth: 300,
+                    className: 'et-church-popup'
+                }).openPopup();
+                
+                console.log('✅ Map fully loaded!');
+                
+                // Add detailed info box below map using Airtable data
+                const infoBox = document.getElementById('church-map-details');
+                if (infoBox) {
+                    const imageHtml = window.churchData.churchImage ? 
+                        `<div style="width: 180px; float: left; margin-right: 20px;">
+                            <img src="${window.churchData.churchImage}" style="width: 100%; border-radius: 8px; display: block;">
+                         </div>` : 
+                        '';
+                    
+                    infoBox.innerHTML = `
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 14px; padding: 20px; background: white; border: 1px solid #cccccc; border-radius: 12px; margin-top: 15px; display: flex; gap: 20px;">
+                            ${imageHtml}
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 8px 0; color: #d12027; font-size: 18px; font-weight: 600;">${window.churchData.church}</h3>
+                                <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.address}</p>
+                                ${window.churchData.contact ? `<p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">${window.churchData.contact}</p>` : ''}
+                                ${window.churchData.email ? `<p style="margin: 0 0 8px 0; font-size: 14px;">✉️ <a href="mailto:${window.churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                                ${window.churchData.phone ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><a href="tel:${window.churchData.phone}" style="color: #d12027; text-decoration: none;">${window.churchData.phone}</a></p>` : ''}
+                                ${window.churchData.meetings ? `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px; line-height: 1.5;">${window.churchData.meetings.replace(/; /g, '<br>')}</p>` : ''}
+                                ${window.churchData.bibles ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #666;">${window.churchData.bibles}</p>` : ''}
+                                ${window.churchData.hymnBooks ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${window.churchData.hymnBooks}</p>` : ''}
+                                ${window.churchData.website ? `<p style="margin: 0; font-size: 14px;">🌐 <a href="${window.churchData.website.startsWith('http') ? window.churchData.website : 'https://' + window.churchData.website}" target="_blank" style="color: #d12027; text-decoration: none; border-bottom: 1px solid #d12027;">Website</a></p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading church map:', error);
+                document.getElementById('church-map').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444; padding: 20px; text-align: center;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                            <div style="font-weight: 600;">Unable to load map preview</div>
+                            <div style="font-size: 0.85em; color: #9ca3af; margin-top: 5px;">Check browser console for details</div>
+                            <div style="font-size: 0.8em; color: #9ca3af; margin-top: 3px;">${error.message}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize map when in edit mode
+        // Note: Map is now initialized in showEditMode() after data loads
+    </script>
+</body>
+</html>
