@@ -854,10 +854,11 @@
             document.getElementById('page-title').textContent = 'Preview Your Listing';
             document.getElementById('marketing-container').classList.add('show');
             
-            // Set personalized greeting - fallback chain: Billing name → Contact → Hello
+            // Set personalized greeting - use marketingName (from direct Churches field)
+            // Fallback chain: marketingName → Contact → Hello
             const greetingEl = document.getElementById('marketing-greeting');
-            if (churchData.billingName) {
-                greetingEl.textContent = `Hello ${churchData.billingName} 👋`;
+            if (churchData.marketingName) {
+                greetingEl.textContent = `Hello ${churchData.marketingName} 👋`;
             } else if (churchData.contact) {
                 greetingEl.textContent = `Hello ${churchData.contact} 👋`;
             } else {
