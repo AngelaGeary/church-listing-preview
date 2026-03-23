@@ -662,7 +662,7 @@
         <!-- Marketing mode (pre-purchase) -->
         <div class="marketing-container" id="marketing-container">
             <h2 class="marketing-headline">Your church is reaching 20,000+ online searchers...</h2>
-            <p class="marketing-subheadline">Now reach 7,000+ print readers with an ET Holiday Church listing</p>
+            <p class="marketing-subheadline">Now reach 7,000+ ET Newspaper readers with a Holiday Church listing</p>
             
             <!-- Stats Box -->
             <div class="stats-box">
@@ -674,9 +674,12 @@
                     </div>
                     <div class="stat-item">
                         <p class="stat-number">7,000+</p>
-                        <p class="stat-label">Print Readers (June 2026)</p>
+                        <p class="stat-label">ET Newspaper Readers</p>
                     </div>
                 </div>
+                <p style="margin: 15px 0 0 0; color: #075985; font-size: 0.95em;">
+                    After booking, we'll send you a link to review and update your listing details
+                </p>
             </div>
             
             <!-- Preview Toggle Buttons -->
@@ -690,15 +693,7 @@
                 <div class="loading">Loading preview...</div>
             </div>
             
-            <!-- Church Finder Preview -->
-            <div class="marketing-church-finder">
-                <h3>📍 How you appear in our Church Finder</h3>
-                <div id="marketing-map" style="height: 400px; border-radius: 8px; margin-bottom: 15px;"></div>
-                <div class="map-info-box" id="marketing-map-info">
-                    <div class="loading">Loading church location...</div>
-                </div>
-            </div>
-            
+            <!-- Pricing Options - MOVED UP -->
             <div class="pricing-options">
                 <div class="pricing-card">
                     <h4>Standard</h4>
@@ -731,6 +726,15 @@
             
             <div class="deadline-notice">
                 <strong>Booking Deadline:</strong> Monday 4th May 2026
+            </div>
+            
+            <!-- Church Finder Preview - MOVED DOWN -->
+            <div class="marketing-church-finder">
+                <h3>📍 How you appear in our Church Finder</h3>
+                <div id="marketing-map" style="height: 400px; border-radius: 8px; margin-bottom: 15px;"></div>
+                <div class="map-info-box" id="marketing-map-info">
+                    <div class="loading">Loading church location...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -844,21 +848,20 @@
                 
                 if (!response.ok) {
                     document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Church location coming soon...</p>';
+                    document.getElementById('marketing-map').style.display = 'none';
                     return;
                 }
                 
                 const data = await response.json();
                 
                 if (data && data.lat && data.lng) {
-                    // Initialize Leaflet map
+                    // Initialize Leaflet map (same as edit mode)
                     const map = L.map('marketing-map').setView([data.lat, data.lng], 15);
                     
-                    // Add OpenStreetMap tiles
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '© OpenStreetMap contributors'
                     }).addTo(map);
                     
-                    // Custom red marker icon
                     const redIcon = L.divIcon({
                         className: 'custom-marker',
                         html: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -869,42 +872,45 @@
                         popupAnchor: [0, -32]
                     });
                     
-                    // Add marker
                     const marker = L.marker([data.lat, data.lng], { icon: redIcon }).addTo(map);
                     
-                    // Add popup
                     const meetings = churchData.meetings ? churchData.meetings.split('\n')[0] : '';
                     marker.bindPopup(`
-                        <strong>${data.name || churchData.church}</strong><br>
-                        ${data.phone ? data.phone + '<br>' : ''}
-                        ${data.email ? '<span style="color: #d12027;">' + data.email + '</span><br>' : ''}
+                        <strong>${churchData.church}</strong><br>
+                        ${churchData.contact ? churchData.contact + '<br>' : ''}
+                        ${churchData.email ? '<span style="color: #d12027;">' + churchData.email + '</span><br>' : ''}
                         ${meetings}
                     `);
                     
-                    // Show info box
+                    // Show info box (same style as edit mode)
                     const infoBox = document.getElementById('marketing-map-info');
                     infoBox.innerHTML = `
-                        <div style="display: flex; gap: 20px;">
-                            ${data.image ? `<div style="flex: 0 0 180px;"><img src="${data.image}" style="width: 100%; height: auto; border-radius: 8px;"></div>` : ''}
+                        <div style="display: flex; gap: 20px; align-items: start;">
+                            ${data.image ? `<div style="flex: 0 0 180px;"><img src="${data.image}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : ''}
                             <div style="flex: 1;">
-                                <h4 style="margin: 0 0 10px 0; color: #1B3A5C;">${data.name || churchData.church}</h4>
-                                <p style="margin: 5px 0; color: #666;"><strong>Address:</strong> ${data.address || churchData.address}</p>
-                                ${data.phone ? `<p style="margin: 5px 0; color: #666;"><strong>Phone:</strong> ${data.phone}</p>` : ''}
-                                ${data.email ? `<p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${data.email}</p>` : ''}
-                                ${meetings ? `<p style="margin: 5px 0; color: #666;"><strong>Services:</strong> ${meetings}</p>` : ''}
-                                <p style="margin: 15px 0 0 0; padding: 12px; background: #fff3cd; border-radius: 6px; color: #856404; font-size: 0.9em;">
-                                    ✓ Your church is live in our Church Finder
-                                </p>
+                                <h4 style="margin: 0 0 12px 0; color: #1B3A5C; font-size: 1.1em;">${churchData.church}</h4>
+                                <p style="margin: 6px 0; color: #555; line-height: 1.6;"><strong>Address:</strong> ${churchData.address}</p>
+                                ${churchData.contact ? `<p style="margin: 6px 0; color: #555;"><strong>Contact:</strong> ${churchData.contact}</p>` : ''}
+                                ${churchData.phone ? `<p style="margin: 6px 0; color: #555;"><strong>Phone:</strong> ${churchData.phone}</p>` : ''}
+                                ${churchData.email ? `<p style="margin: 6px 0; color: #555;"><strong>Email:</strong> ${churchData.email}</p>` : ''}
+                                ${meetings ? `<p style="margin: 6px 0; color: #555;"><strong>Services:</strong> ${meetings}</p>` : ''}
+                                <div style="margin-top: 16px; padding: 14px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 6px;">
+                                    <p style="margin: 0; color: #075985; font-size: 0.95em; font-weight: 500;">
+                                        ✓ Your church is live in our Church Finder, reaching 20,000+ online searchers monthly
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     `;
                 } else {
                     document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Church location data not available</p>';
+                    document.getElementById('marketing-map').style.display = 'none';
                 }
                 
             } catch (error) {
                 console.error('Error loading church location:', error);
                 document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Unable to load church location</p>';
+                document.getElementById('marketing-map').style.display = 'none';
             }
         }
 
