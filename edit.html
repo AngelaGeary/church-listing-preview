@@ -502,6 +502,34 @@
             .pricing-options {
                 grid-template-columns: 1fr;
             }
+            
+            /* Marketing mode responsive */
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .preview-toggle {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .preview-toggle button {
+                width: 100%;
+                padding: 14px;
+            }
+            
+            .marketing-headline {
+                font-size: 1.5em;
+            }
+            
+            .marketing-church-finder {
+                padding: 20px;
+            }
+            
+            #marketing-map {
+                height: 300px !important;
+            }
         }
     </style>
 </head>
@@ -843,50 +871,89 @@
         
         // Initialize map for marketing mode
         async function initMarketingMap() {
+            console.log('🗺️ Marketing mode: Starting map initialization...');
+            console.log('Church data:', churchData);
+            
+            if (!churchData || !churchData.church) {
+                console.error('❌ No church data available for map');
+                document.getElementById('marketing-map').style.display = 'none';
+                document.getElementById('marketing-map-info').innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Your church is in our Church Finder.<br>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027;">View Church Finder →</a>
+                    </p>
+                `;
+                return;
+            }
+            
             try {
-                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(churchData.address)}&name=${encodeURIComponent(churchData.church)}`);
+                console.log('📡 Fetching church location from API...');
+                
+                // Use same search strategy as edit mode
+                const searchTerm = churchData.address || churchData.countyOrCity || churchData.church;
+                console.log('Searching Store Locator for:', searchTerm);
+                
+                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(searchTerm)}&name=${encodeURIComponent(churchData.church)}`);
+                
+                console.log('Response status:', response.status);
                 
                 if (!response.ok) {
-                    document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Church location coming soon...</p>';
-                    document.getElementById('marketing-map').style.display = 'none';
-                    return;
+                    const errorText = await response.text();
+                    console.error('❌ API response error:', errorText);
+                    throw new Error('Failed to fetch church location');
                 }
                 
                 const data = await response.json();
+                const location = data.location; // KEY FIX: Use data.location like edit mode
                 
-                if (data && data.lat && data.lng) {
+                console.log('✅ Church location data:', location);
+                
+                if (location && location.lat && location.lng) {
+                    console.log('🗺️ Initializing Leaflet Map...');
+                    
                     // Initialize Leaflet map (same as edit mode)
-                    const map = L.map('marketing-map').setView([data.lat, data.lng], 15);
+                    const map = L.map('marketing-map').setView([location.lat, location.lng], 15);
                     
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '© OpenStreetMap contributors'
                     }).addTo(map);
                     
-                    const redIcon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 0C10.48 0 6 4.48 6 10C6 17.5 16 32 16 32C16 32 26 17.5 26 10C26 4.48 21.52 0 16 0ZM16 14C13.79 14 12 12.21 12 10C12 7.79 13.79 6 16 6C18.21 6 20 7.79 20 10C20 12.21 18.21 14 16 14Z" fill="#d12027"/>
-                        </svg>`,
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 32],
-                        popupAnchor: [0, -32]
+                    // Create custom red marker (same as edit mode)
+                    const redIcon = L.icon({
+                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwLjYgMTIuNSAyOC41IDEyLjUgMjguNVMyNSAyMy4xIDI1IDEyLjVDMjUgNS42IDE5LjQgMCAxMi41IDB6bTAgMTcuNWMtMi44IDAtNS0yLjItNS01czIuMi01IDUtNSA1IDIuMiA1IDUtMi4yIDUtNSA1eiIgZmlsbD0iI2QxMjAyNyIvPjwvc3ZnPg==',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34]
                     });
                     
-                    const marker = L.marker([data.lat, data.lng], { icon: redIcon }).addTo(map);
+                    const marker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(map);
                     
+                    // Simplified popup
                     const meetings = churchData.meetings ? churchData.meetings.split('\n')[0] : '';
-                    marker.bindPopup(`
-                        <strong>${churchData.church}</strong><br>
-                        ${churchData.contact ? churchData.contact + '<br>' : ''}
-                        ${churchData.email ? '<span style="color: #d12027;">' + churchData.email + '</span><br>' : ''}
-                        ${meetings}
-                    `);
+                    const popupContent = `
+                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
+                            <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${churchData.church}</h3>
+                            <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${churchData.contact || ''}</p>
+                            ${churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                            ${meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${meetings}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent, {
+                        maxWidth: 300,
+                        className: 'et-church-popup'
+                    }).openPopup();
+                    
+                    console.log('✅ Map fully loaded!');
                     
                     // Show info box (same style as edit mode)
                     const infoBox = document.getElementById('marketing-map-info');
+                    const imageHtml = churchData.churchImage ? 
+                        `<div style="flex: 0 0 180px;"><img src="${churchData.churchImage}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : '';
+                    
                     infoBox.innerHTML = `
                         <div style="display: flex; gap: 20px; align-items: start;">
-                            ${data.image ? `<div style="flex: 0 0 180px;"><img src="${data.image}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : ''}
+                            ${imageHtml}
                             <div style="flex: 1;">
                                 <h4 style="margin: 0 0 12px 0; color: #1B3A5C; font-size: 1.1em;">${churchData.church}</h4>
                                 <p style="margin: 6px 0; color: #555; line-height: 1.6;"><strong>Address:</strong> ${churchData.address}</p>
@@ -903,14 +970,19 @@
                         </div>
                     `;
                 } else {
-                    document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Church location data not available</p>';
-                    document.getElementById('marketing-map').style.display = 'none';
+                    console.warn('No lat/lng in location data');
+                    throw new Error('No location coordinates');
                 }
                 
             } catch (error) {
                 console.error('Error loading church location:', error);
-                document.getElementById('marketing-map-info').innerHTML = '<p style="color: #666;">Unable to load church location</p>';
                 document.getElementById('marketing-map').style.display = 'none';
+                document.getElementById('marketing-map-info').innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Your church is in our Church Finder.<br>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027;">View Church Finder →</a>
+                    </p>
+                `;
             }
         }
 
