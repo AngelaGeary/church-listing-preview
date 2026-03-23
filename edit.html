@@ -246,7 +246,7 @@
         /* Marketing mode */
         .marketing-container {
             display: none;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 40px auto;
             padding: 40px;
             background: white;
@@ -329,9 +329,9 @@
         }
         
         .book-button {
-            display: inline-block;
+            display: block;
             width: 100%;
-            padding: 14px 24px;
+            padding: 14px 20px;
             background: #d12027;
             color: white;
             text-decoration: none;
@@ -339,6 +339,8 @@
             font-size: 16px;
             font-weight: bold;
             margin-top: 15px;
+            text-align: center;
+            box-sizing: border-box;
             transition: all 0.3s ease;
             font-family: Arial, sans-serif;
         }
@@ -689,6 +691,13 @@
 
         <!-- Marketing mode (pre-purchase) -->
         <div class="marketing-container" id="marketing-container">
+            <!-- Personalized Greeting -->
+            <div style="margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7; border-radius: 8px;">
+                <p style="margin: 0; color: #1B3A5C; font-size: 1.1em;" id="marketing-greeting">
+                    Hello! 👋
+                </p>
+            </div>
+            
             <h2 class="marketing-headline">Your church is reaching 20,000+ online searchers...</h2>
             <p class="marketing-subheadline">Now reach 7,000+ ET Newspaper readers with a Holiday Church listing</p>
             
@@ -844,6 +853,16 @@
         function showMarketingMode() {
             document.getElementById('page-title').textContent = 'Preview Your Listing';
             document.getElementById('marketing-container').classList.add('show');
+            
+            // Set personalized greeting - fallback chain: Billing name → Contact → Hello
+            const greetingEl = document.getElementById('marketing-greeting');
+            if (churchData.billingName) {
+                greetingEl.textContent = `Hello ${churchData.billingName} 👋`;
+            } else if (churchData.contact) {
+                greetingEl.textContent = `Hello ${churchData.contact} 👋`;
+            } else {
+                greetingEl.textContent = 'Hello 👋';
+            }
             
             // Set initial preview type to Enhanced
             window.marketingPreviewType = 'enhanced';
