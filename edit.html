@@ -774,6 +774,146 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Onboard mode (new church welcome) -->
+        <div class="split-container" id="onboard-container">
+            <div class="edit-panel">
+                <h3>Welcome! Update Your Church Details</h3>
+                <p style="color: #666; font-size: 0.95em; margin-bottom: 20px;">
+                    Your church is now listed in the ET Church Finder (reaching 20,000+ monthly searches). 
+                    Please review and update your information below.
+                </p>
+                
+                <form id="onboard-form">
+                    <div class="form-group">
+                        <label>Church Name</label>
+                        <input type="text" id="onboard-church" readonly style="background: #f5f5f5;">
+                        <small>Contact us to change your church name</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address <span class="char-count" id="onboard-address-count"></span></label>
+                        <input type="text" id="onboard-address" maxlength="200">
+                        <small>⚠️ Use standard address format for mapping to work correctly</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Service Times / Meetings <span class="char-count" id="onboard-meetings-count"></span></label>
+                        <textarea id="onboard-meetings" maxlength="500"></textarea>
+                        <small>Press Enter for line breaks</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Contact Person <span class="char-count" id="onboard-contact-count"></span></label>
+                        <input type="text" id="onboard-contact" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone <span class="char-count" id="onboard-phone-count"></span></label>
+                        <input type="text" id="onboard-phone" maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email <span class="char-count" id="onboard-email-count"></span></label>
+                        <input type="email" id="onboard-email" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Bible Version <span class="char-count" id="onboard-bibles-count"></span></label>
+                        <input type="text" id="onboard-bibles" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Hymnbook <span class="char-count" id="onboard-hymnbooks-count"></span></label>
+                        <input type="text" id="onboard-hymnbooks" maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Website <span class="char-count" id="onboard-website-count"></span></label>
+                        <input type="url" id="onboard-website" maxlength="100">
+                        <small>e.g., www.yourchurch.org.uk</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes <span class="char-count" id="onboard-notes-count"></span></label>
+                        <textarea id="onboard-notes" maxlength="200"></textarea>
+                        <small>Directions, parking info, etc. (Brief notes only)</small>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="preview-panel">
+                <h3>Your Listing Preview</h3>
+                <p style="color: #666; font-size: 0.95em; margin-bottom: 15px;">
+                    Toggle between listing types to see how your church would appear in print
+                </p>
+                
+                <!-- Preview Toggle Buttons -->
+                <div class="preview-toggle" style="margin-bottom: 20px;">
+                    <button onclick="switchOnboardPreview('standard')" id="onboard-toggle-standard" class="active">Standard</button>
+                    <button onclick="switchOnboardPreview('enhanced')" id="onboard-toggle-enhanced">Enhanced</button>
+                    <button onclick="switchOnboardPreview('photo')" id="onboard-toggle-photo">Photo</button>
+                </div>
+                
+                <div class="success-message" id="onboard-success-message">
+                    ✓ Changes saved successfully!
+                </div>
+                
+                <div class="unsaved-warning" id="onboard-unsaved-warning" style="display: none;">
+                    ⚠️ You have unsaved changes
+                </div>
+                
+                <div id="onboard-preview">
+                    <div class="loading">Loading preview...</div>
+                </div>
+                
+                <button type="button" class="save-button" id="onboard-save-button">
+                    💾 Save My Updates
+                </button>
+                
+                <!-- Pricing Cards Section -->
+                <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
+                    <h3 style="color: #1B3A5C; text-align: center; margin-bottom: 10px;">Reach 7,000+ ET Newspaper Readers</h3>
+                    <p style="color: #666; text-align: center; font-size: 0.95em; margin-bottom: 25px;">
+                        Your church is live online. Add a print listing in our June 2026 Holiday Church Guide:
+                    </p>
+                    
+                    <div class="pricing-options">
+                        <div class="pricing-card">
+                            <h4 style="margin: 0 0 10px 0; color: #1B3A5C; font-size: 16px;">Standard</h4>
+                            <p style="margin: 0 0 10px 0; color: #d12027; font-size: 24px; font-weight: bold;">£32</p>
+                            <p style="margin: 0 0 15px 0; color: #666; font-size: 13px;">Essential church listing</p>
+                            <a href="https://book.stripe.com/4gw3cdf7afor7846pW" class="book-button" target="_blank" style="font-size: 14px; padding: 10px 20px;">
+                                Book Standard →
+                            </a>
+                        </div>
+                        
+                        <div class="pricing-card popular">
+                            <div class="popular-badge">Most Popular</div>
+                            <h4 style="margin: 0 0 10px 0; color: #1B3A5C; font-size: 16px;">Enhanced</h4>
+                            <p style="margin: 0 0 10px 0; color: #d12027; font-size: 24px; font-weight: bold;">£42</p>
+                            <p style="margin: 0 0 15px 0; color: #666; font-size: 13px;">Stand out with centered layout</p>
+                            <a href="https://book.stripe.com/8wMbIJcZ2gsv8c84hN" class="book-button" target="_blank" style="font-size: 14px; padding: 10px 20px;">
+                                Book Enhanced →
+                            </a>
+                        </div>
+                        
+                        <div class="pricing-card">
+                            <h4 style="margin: 0 0 10px 0; color: #1B3A5C; font-size: 16px;">Photo</h4>
+                            <p style="margin: 0 0 10px 0; color: #d12027; font-size: 24px; font-weight: bold;">£52</p>
+                            <p style="margin: 0 0 15px 0; color: #666; font-size: 13px;">Include your church photo</p>
+                            <a href="https://book.stripe.com/28ofYZaQU6RVgIEaGa" class="book-button" target="_blank" style="font-size: 14px; padding: 10px 20px;">
+                                Book Photo →
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="deadline-notice" style="margin-top: 20px;">
+                        <strong>Booking Deadline:</strong> Monday 4th May 2026
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -813,6 +953,8 @@
                     showEditMode();
                 } else if (mode === 'preview') {
                     showMarketingMode();
+                } else if (mode === 'onboard') {
+                    showOnboardMode();
                 } else {
                     // Auto-detect: if they have Included 2026 = YES, show edit mode
                     // For now, we'll just show the mode based on the URL parameter
@@ -887,6 +1029,184 @@
             
             // Regenerate preview
             generatePreview('marketing-preview');
+        }
+        
+        // Show onboard mode (new church welcome - hybrid of edit + marketing)
+        function showOnboardMode() {
+            document.getElementById('page-title').textContent = 'Welcome to ET Church Finder';
+            document.getElementById('onboard-container').classList.add('show');
+            
+            // Set initial preview type to Standard
+            window.onboardPreviewType = 'standard';
+            
+            // Populate form with church data
+            populateOnboardForm();
+            
+            // Setup live preview
+            setupOnboardLivePreview();
+            
+            // Setup form submission
+            document.getElementById('onboard-save-button').addEventListener('click', handleOnboardSave);
+        }
+        
+        // Populate onboard form
+        function populateOnboardForm() {
+            document.getElementById('onboard-church').value = churchData.church || '';
+            document.getElementById('onboard-address').value = churchData.address || '';
+            document.getElementById('onboard-meetings').value = churchData.meetings || '';
+            document.getElementById('onboard-contact').value = churchData.contact || '';
+            document.getElementById('onboard-phone').value = churchData.phone || '';
+            document.getElementById('onboard-email').value = churchData.email || '';
+            document.getElementById('onboard-bibles').value = churchData.bibles || '';
+            document.getElementById('onboard-hymnbooks').value = churchData.hymnBooks || '';
+            document.getElementById('onboard-website').value = churchData.website || '';
+            document.getElementById('onboard-notes').value = churchData.notes || '';
+            
+            // Update character counts
+            updateOnboardCharCounts();
+        }
+        
+        // Setup live preview for onboard mode
+        function setupOnboardLivePreview() {
+            // Generate initial preview
+            generateOnboardPreview();
+            
+            let hasUnsavedChanges = false;
+            
+            // Add input listeners for live preview
+            const inputs = document.querySelectorAll('#onboard-form input, #onboard-form textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    generateOnboardPreview();
+                    hasUnsavedChanges = true;
+                    document.getElementById('onboard-unsaved-warning').style.display = 'block';
+                    updateOnboardCharCounts();
+                });
+            });
+        }
+        
+        // Generate preview for onboard mode
+        function generateOnboardPreview() {
+            // Get current form values
+            const previewData = {
+                church: document.getElementById('onboard-church').value,
+                address: document.getElementById('onboard-address').value,
+                countyOrCity: churchData.countyOrCity,
+                meetings: document.getElementById('onboard-meetings').value,
+                contact: document.getElementById('onboard-contact').value,
+                phone: document.getElementById('onboard-phone').value,
+                email: document.getElementById('onboard-email').value,
+                bibles: document.getElementById('onboard-bibles').value,
+                hymnBooks: document.getElementById('onboard-hymnbooks').value,
+                website: document.getElementById('onboard-website').value,
+                notes: document.getElementById('onboard-notes').value,
+                churchImage: churchData.churchImage
+            };
+            
+            // Generate preview based on selected type
+            let html;
+            if (window.onboardPreviewType === 'enhanced') {
+                html = generateEnhancedListing(previewData);
+            } else if (window.onboardPreviewType === 'photo') {
+                html = generatePhotoListing(previewData);
+            } else {
+                html = generateStandardListing(previewData);
+            }
+            
+            document.getElementById('onboard-preview').innerHTML = html;
+        }
+        
+        // Switch preview type in onboard mode
+        function switchOnboardPreview(type) {
+            window.onboardPreviewType = type;
+            
+            // Update button states
+            document.getElementById('onboard-toggle-standard').classList.remove('active');
+            document.getElementById('onboard-toggle-enhanced').classList.remove('active');
+            document.getElementById('onboard-toggle-photo').classList.remove('active');
+            document.getElementById('onboard-toggle-' + type).classList.add('active');
+            
+            // Regenerate preview
+            generateOnboardPreview();
+        }
+        
+        // Update character counts for onboard form
+        function updateOnboardCharCounts() {
+            const fields = [
+                { id: 'onboard-address', counter: 'onboard-address-count', max: 200 },
+                { id: 'onboard-meetings', counter: 'onboard-meetings-count', max: 500 },
+                { id: 'onboard-contact', counter: 'onboard-contact-count', max: 100 },
+                { id: 'onboard-phone', counter: 'onboard-phone-count', max: 50 },
+                { id: 'onboard-email', counter: 'onboard-email-count', max: 100 },
+                { id: 'onboard-bibles', counter: 'onboard-bibles-count', max: 100 },
+                { id: 'onboard-hymnbooks', counter: 'onboard-hymnbooks-count', max: 100 },
+                { id: 'onboard-website', counter: 'onboard-website-count', max: 100 },
+                { id: 'onboard-notes', counter: 'onboard-notes-count', max: 200 }
+            ];
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const counter = document.getElementById(field.counter);
+                if (element && counter) {
+                    const length = element.value.length;
+                    counter.textContent = `${length}/${field.max}`;
+                    counter.style.color = length >= field.max * 0.9 ? '#dc2626' : '#666';
+                }
+            });
+        }
+        
+        // Handle save for onboard mode
+        async function handleOnboardSave(e) {
+            e.preventDefault();
+            
+            const saveButton = document.getElementById('onboard-save-button');
+            const originalText = saveButton.textContent;
+            
+            saveButton.textContent = '💾 Saving...';
+            saveButton.disabled = true;
+            
+            try {
+                const updateData = {
+                    address: document.getElementById('onboard-address').value,
+                    meetings: document.getElementById('onboard-meetings').value,
+                    contact: document.getElementById('onboard-contact').value,
+                    phone: document.getElementById('onboard-phone').value,
+                    email: document.getElementById('onboard-email').value,
+                    bibles: document.getElementById('onboard-bibles').value,
+                    hymnBooks: document.getElementById('onboard-hymnbooks').value,
+                    website: document.getElementById('onboard-website').value,
+                    notes: document.getElementById('onboard-notes').value
+                };
+                
+                const response = await fetch(`/.netlify/functions/update-church`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recordId: recordId,
+                        fields: updateData
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save');
+                
+                // Show success message
+                document.getElementById('onboard-success-message').classList.add('show');
+                document.getElementById('onboard-unsaved-warning').style.display = 'none';
+                
+                setTimeout(() => {
+                    document.getElementById('onboard-success-message').classList.remove('show');
+                }, 3000);
+                
+                // Update stored church data
+                Object.assign(churchData, updateData);
+                
+            } catch (error) {
+                console.error('Error saving:', error);
+                alert('Failed to save changes. Please try again.');
+            } finally {
+                saveButton.textContent = originalText;
+                saveButton.disabled = false;
+            }
         }
         
         // Initialize map for marketing mode
