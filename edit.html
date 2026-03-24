@@ -1167,15 +1167,15 @@
             
             try {
                 const updateData = {
-                    address: document.getElementById('onboard-address').value,
-                    meetings: document.getElementById('onboard-meetings').value,
-                    contact: document.getElementById('onboard-contact').value,
-                    phone: document.getElementById('onboard-phone').value,
-                    email: document.getElementById('onboard-email').value,
-                    bibles: document.getElementById('onboard-bibles').value,
-                    hymnBooks: document.getElementById('onboard-hymnbooks').value,
-                    website: document.getElementById('onboard-website').value,
-                    notes: document.getElementById('onboard-notes').value
+                    'Address': document.getElementById('onboard-address').value,
+                    'Meetings': document.getElementById('onboard-meetings').value,
+                    'Contact': document.getElementById('onboard-contact').value,
+                    'Phone': document.getElementById('onboard-phone').value,
+                    'Email': document.getElementById('onboard-email').value,
+                    'Bibles': document.getElementById('onboard-bibles').value,
+                    'Hymn books': document.getElementById('onboard-hymnbooks').value,
+                    'Website': document.getElementById('onboard-website').value,
+                    'Notes': document.getElementById('onboard-notes').value
                 };
                 
                 const response = await fetch(`/.netlify/functions/update-church`, {
