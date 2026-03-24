@@ -608,7 +608,10 @@
                     
                     <div class="form-group">
                         <label>Website <span class="char-count" id="website-count"></span></label>
-                        <input type="url" id="website" maxlength="100">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="url" id="website" maxlength="100" style="flex: 1;">
+                            <span id="website-status" style="min-width: 150px; font-size: 0.85em;"></span>
+                        </div>
                         <small>e.g., www.yourchurch.org.uk</small>
                     </div>
                     
@@ -830,7 +833,10 @@
                     
                     <div class="form-group">
                         <label>Website <span class="char-count" id="onboard-website-count"></span></label>
-                        <input type="url" id="onboard-website" maxlength="100">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="url" id="onboard-website" maxlength="100" style="flex: 1;">
+                            <span id="onboard-website-status" style="min-width: 150px; font-size: 0.85em;"></span>
+                        </div>
                         <small>e.g., www.yourchurch.org.uk</small>
                     </div>
                     
@@ -917,122 +923,123 @@
     </div>
 
     <script>
-// URL Validation System - Add this to edit.html
-
-// Cache for checked URLs to avoid redundant checks
-const urlCheckCache = new Map();
-
-// Debounce timer for URL checking
-let urlCheckTimer = null;
-
-// Function to fix and validate website URL
-async function checkWebsiteUrl(inputId, statusId) {
-    const input = document.getElementById(inputId);
-    const status = document.getElementById(statusId);
-    
-    let url = input.value.trim();
-    
-    // If empty, clear status
-    if (!url) {
-        status.innerHTML = '';
-        return;
-    }
-    
-    // Auto-fix: add https:// if no protocol
-    if (!url.match(/^https?:\/\//i)) {
-        url = 'https://' + url;
-        input.value = url;
-    }
-    
-    // Check cache first
-    if (urlCheckCache.has(url)) {
-        const cached = urlCheckCache.get(url);
-        displayUrlStatus(status, cached);
-        return;
-    }
-    
-    // Show checking state
-    status.innerHTML = '<span style="color: #6b7280;">🔄 Checking...</span>';
-    
-    try {
-        const response = await fetch(`/.netlify/functions/check-url?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
+        // ===== URL Validation System =====
         
-        // Cache the result
-        urlCheckCache.set(url, data);
+        // Cache for checked URLs to avoid redundant checks
+        const urlCheckCache = new Map();
         
-        // Display result
-        displayUrlStatus(status, data);
+        // Debounce timer for URL checking
+        let urlCheckTimer = null;
         
-    } catch (error) {
-        console.error('Error checking URL:', error);
-        status.innerHTML = '<span style="color: #dc2626;">⚠️ Could not check</span>';
-    }
-}
-
-// Display URL check status
-function displayUrlStatus(statusElement, data) {
-    if (data.valid) {
-        let message = '✅ Valid';
-        
-        // If redirected, show final URL
-        if (data.finalUrl && data.finalUrl !== data.checked) {
-            const finalDomain = new URL(data.finalUrl).hostname;
-            message = `✅ Valid (redirects to ${finalDomain})`;
+        // Function to fix and validate website URL
+        async function checkWebsiteUrl(inputId, statusId) {
+            const input = document.getElementById(inputId);
+            const status = document.getElementById(statusId);
+            
+            let url = input.value.trim();
+            
+            // If empty, clear status
+            if (!url) {
+                status.innerHTML = '';
+                return;
+            }
+            
+            // Auto-fix: add https:// if no protocol
+            if (!url.match(/^https?:\/\//i)) {
+                url = 'https://' + url;
+                input.value = url;
+            }
+            
+            // Check cache first
+            if (urlCheckCache.has(url)) {
+                const cached = urlCheckCache.get(url);
+                displayUrlStatus(status, cached);
+                return;
+            }
+            
+            // Show checking state
+            status.innerHTML = '<span style="color: #6b7280;">🔄 Checking...</span>';
+            
+            try {
+                const response = await fetch(`/.netlify/functions/check-url?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                // Cache the result
+                urlCheckCache.set(url, data);
+                
+                // Display result
+                displayUrlStatus(status, data);
+                
+            } catch (error) {
+                console.error('Error checking URL:', error);
+                status.innerHTML = '<span style="color: #dc2626;">⚠️ Could not check</span>';
+            }
         }
         
-        statusElement.innerHTML = `<span style="color: #059669; font-size: 0.9em;">${message}</span>`;
-    } else {
-        let errorMsg = 'Not reachable';
-        
-        if (data.error === 'Invalid URL format') {
-            errorMsg = 'Invalid format';
-        } else if (data.error === 'Request timeout') {
-            errorMsg = 'Timeout (site too slow)';
-        } else if (data.statusCode) {
-            errorMsg = `Error ${data.statusCode}`;
+        // Display URL check status
+        function displayUrlStatus(statusElement, data) {
+            if (data.valid) {
+                let message = '✅ Valid';
+                
+                // If redirected, show final URL
+                if (data.finalUrl && data.finalUrl !== data.checked) {
+                    const finalDomain = new URL(data.finalUrl).hostname;
+                    message = `✅ Valid (→ ${finalDomain})`;
+                }
+                
+                statusElement.innerHTML = `<span style="color: #059669; font-size: 0.9em;">${message}</span>`;
+            } else {
+                let errorMsg = 'Not reachable';
+                
+                if (data.error === 'Invalid URL format') {
+                    errorMsg = 'Invalid format';
+                } else if (data.error === 'Request timeout') {
+                    errorMsg = 'Timeout';
+                } else if (data.statusCode) {
+                    errorMsg = `Error ${data.statusCode}`;
+                }
+                
+                statusElement.innerHTML = `<span style="color: #dc2626; font-size: 0.9em;">❌ ${errorMsg}</span>`;
+            }
         }
         
-        statusElement.innerHTML = `<span style="color: #dc2626; font-size: 0.9em;">❌ ${errorMsg}</span>`;
-    }
-}
-
-// Debounced URL check (waits for user to stop typing)
-function scheduleUrlCheck(inputId, statusId) {
-    clearTimeout(urlCheckTimer);
-    urlCheckTimer = setTimeout(() => {
-        checkWebsiteUrl(inputId, statusId);
-    }, 1500); // Wait 1.5 seconds after user stops typing
-}
-
-// Setup URL validation for a field
-function setupUrlValidation(inputId, statusId) {
-    const input = document.getElementById(inputId);
-    const status = document.getElementById(statusId);
-    
-    if (!input || !status) return;
-    
-    // Check on blur (when user leaves field)
-    input.addEventListener('blur', () => {
-        clearTimeout(urlCheckTimer);
-        checkWebsiteUrl(inputId, statusId);
-    });
-    
-    // Optional: Check while typing (debounced)
-    input.addEventListener('input', () => {
-        scheduleUrlCheck(inputId, statusId);
-    });
-}
-
-// Initialize URL validation when page loads
-// Call this in your initializePage() function or after form is populated
-function initUrlValidation() {
-    // For edit mode
-    setupUrlValidation('website', 'website-status');
-    
-    // For onboard mode
-    setupUrlValidation('onboard-website', 'onboard-website-status');
-}
+        // Debounced URL check (waits for user to stop typing)
+        function scheduleUrlCheck(inputId, statusId) {
+            clearTimeout(urlCheckTimer);
+            urlCheckTimer = setTimeout(() => {
+                checkWebsiteUrl(inputId, statusId);
+            }, 1500); // Wait 1.5 seconds after user stops typing
+        }
+        
+        // Setup URL validation for a field
+        function setupUrlValidation(inputId, statusId) {
+            const input = document.getElementById(inputId);
+            const status = document.getElementById(statusId);
+            
+            if (!input || !status) return;
+            
+            // Check on blur (when user leaves field)
+            input.addEventListener('blur', () => {
+                clearTimeout(urlCheckTimer);
+                checkWebsiteUrl(inputId, statusId);
+            });
+            
+            // Optional: Check while typing (debounced)
+            input.addEventListener('input', () => {
+                scheduleUrlCheck(inputId, statusId);
+            });
+        }
+        
+        // Initialize URL validation
+        function initUrlValidation() {
+            // For edit mode
+            setupUrlValidation('website', 'website-status');
+            
+            // For onboard mode
+            setupUrlValidation('onboard-website', 'onboard-website-status');
+        }
+        
+        // ===== End URL Validation System =====
         
         // Get URL parameters
         function getUrlParameter(name) {
@@ -1107,6 +1114,9 @@ function initUrlValidation() {
             
             // Initialize church map AFTER data is loaded
             setTimeout(initChurchMap, 500);
+            
+            // Initialize URL validation
+            initUrlValidation();
         }
 
         function showMarketingMode() {
@@ -1164,6 +1174,9 @@ function initUrlValidation() {
             
             // Setup form submission
             document.getElementById('onboard-save-button').addEventListener('click', handleOnboardSave);
+            
+            // Initialize URL validation
+            initUrlValidation();
         }
         
         // Populate onboard form
