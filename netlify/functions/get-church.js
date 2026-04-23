@@ -79,6 +79,8 @@ exports.handler = async (event, context) => {
         meetings: fields['Meetings'] || '',
         notes: fields['Notes'] || '',
         churchImage: fields['Church image'] ? fields['Church image'][0]?.url : null,
+        latitude: fields['Latitude'] || null,
+        longitude: fields['Longitude'] || null,
         // For post-purchase edit mode: pull from linked tables
         billingName: (fields['Billing name (from Holiday church purchases 2026)'] ? fields['Billing name (from Holiday church purchases 2026)'][0] : null) ||
                      (fields['Billing name (from Holiday Church online subscribers only)'] ? fields['Billing name (from Holiday Church online subscribers only)'][0] : null),
