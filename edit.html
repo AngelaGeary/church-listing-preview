@@ -572,7 +572,7 @@
                     <div class="form-group">
                         <label>Address <span class="char-count" id="address-count"></span></label>
                         <input type="text" id="address" maxlength="200">
-                        <small>ℹ️ Use standard UK format e.g. 12 High Street, Clifton, Bristol, BS8 1AB</small>
+                        <small>ℹ️ Use standard UK format e.g. 12 High Street, Clifton, Bristol BS8 1AB</small>
                     </div>
                     
                     <div class="form-group">
@@ -612,7 +612,7 @@
                             <input type="url" id="website" maxlength="100" style="flex: 1;">
                             <span id="website-status" style="min-width: 150px; font-size: 0.85em;"></span>
                         </div>
-                        <small>e.g., https://www.yourchurch.org.uk</small>
+                        <small>e.g., www.yourchurch.org.uk</small>
                     </div>
                     
                     <div class="form-group" id="image-upload-group" style="display: none;">
@@ -626,7 +626,7 @@
                     
                     <div class="form-group">
                         <label>Notes <span class="char-count" id="notes-count"></span></label>
-                        <textarea id="notes" maxlength="100"></textarea>
+                        <textarea id="notes" maxlength="200"></textarea>
                         <small>Directions, parking, What3Words location, etc. (Brief notes only)</small>
                     </div>
                 </form>
@@ -874,7 +874,7 @@
                 </div>
                 
                 <button type="button" class="save-button" id="onboard-save-button">
-                    Save My Updates
+                    💾 Save My Updates
                 </button>
                 
                 <!-- Pricing Cards Section -->
@@ -1356,89 +1356,89 @@
                 return;
             }
             
+            // Check if we have Lat/Long from Airtable
+            if (!churchData.latitude || !churchData.longitude) {
+                console.error('❌ No latitude/longitude available for this church');
+                document.getElementById('marketing-map').style.display = 'none';
+                document.getElementById('marketing-map-info').innerHTML = `
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Your church is in our Church Finder.<br>
+                        <a href="https://www.evangelical-times.org/churches/" target="_blank" style="color: #d12027;">View Church Finder →</a>
+                    </p>
+                `;
+                return;
+            }
+            
             try {
-                console.log('📡 Fetching church location from API...');
+                const lat = parseFloat(churchData.latitude);
+                const lng = parseFloat(churchData.longitude);
                 
-                // Use same search strategy as edit mode
-                const searchTerm = churchData.address || churchData.countyOrCity || churchData.church;
-                console.log('Searching Store Locator for:', searchTerm);
+                console.log('📍 Using Airtable coordinates:', { lat, lng });
                 
-                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(searchTerm)}&name=${encodeURIComponent(churchData.church)}`);
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ API response error:', errorText);
-                    throw new Error('Failed to fetch church location');
+                if (isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates');
                 }
                 
-                const data = await response.json();
-                const location = data.location; // KEY FIX: Use data.location like edit mode
+                console.log('🗺️ Initializing Leaflet Map...');
                 
-                console.log('✅ Church location data:', location);
+                // Initialize Leaflet map (same as edit mode)
+                const map = L.map('marketing-map').setView([lat, lng], 15);
                 
-                if (location && location.lat && location.lng) {
-                    console.log('🗺️ Initializing Leaflet Map...');
-                    
-                    // Initialize Leaflet map (same as edit mode)
-                    const map = L.map('marketing-map').setView([location.lat, location.lng], 15);
-                    
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(map);
-                    
-                    // Create custom red marker (same as edit mode)
-                    const redIcon = L.icon({
-                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwLjYgMTIuNSAyOC41IDEyLjUgMjguNVMyNSAyMy4xIDI1IDEyLjVDMjUgNS42IDE5LjQgMCAxMi41IDB6bTAgMTcuNWMtMi44IDAtNS0yLjItNS01czIuMi01IDUtNSA1IDIuMiA1IDUtMi4yIDUtNSA1eiIgZmlsbD0iI2QxMjAyNyIvPjwvc3ZnPg==',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34]
-                    });
-                    
-                    const marker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(map);
-                    
-                    // Simplified popup
-                    const meetings = churchData.meetings ? churchData.meetings.split('\n')[0] : '';
-                    const popupContent = `
-                        <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
-                            <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${churchData.church}</h3>
-                            <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${churchData.contact || ''}</p>
-                            ${churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
-                            ${meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${meetings}</p>` : ''}
-                        </div>
-                    `;
-                    
-                    marker.bindPopup(popupContent, {
-                        maxWidth: 300,
-                        className: 'et-church-popup'
-                    }).openPopup();
-                    
-                    console.log('✅ Map fully loaded!');
-                    
-                    // Show info box (same style as edit mode)
-                    const infoBox = document.getElementById('marketing-map-info');
-                    const imageHtml = churchData.churchImage ? 
-                        `<div style="flex: 0 0 180px;"><img src="${churchData.churchImage}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : '';
-                    
-                    infoBox.innerHTML = `
-                        <div style="display: flex; gap: 20px; align-items: start;">
-                            ${imageHtml}
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 12px 0; color: #1B3A5C; font-size: 1.1em;">${churchData.church}</h4>
-                                <p style="margin: 6px 0; color: #555; line-height: 1.6;"><strong>Address:</strong> ${churchData.address}</p>
-                                ${churchData.contact ? `<p style="margin: 6px 0; color: #555;"><strong>Contact:</strong> ${churchData.contact}</p>` : ''}
-                                ${churchData.phone ? `<p style="margin: 6px 0; color: #555;"><strong>Phone:</strong> ${churchData.phone}</p>` : ''}
-                                ${churchData.email ? `<p style="margin: 6px 0; color: #555;"><strong>Email:</strong> ${churchData.email}</p>` : ''}
-                                ${meetings ? `<p style="margin: 6px 0; color: #555;"><strong>Services:</strong> ${meetings}</p>` : ''}
-                                <div style="margin-top: 16px; padding: 14px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 6px;">
-                                    <p style="margin: 0; color: #075985; font-size: 0.95em; font-weight: 500;">
-                                        ✓ Your church is live in our Church Finder, reaching 20,000+ online searchers monthly
-                                    </p>
-                                </div>
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                // Create custom red marker (same as edit mode)
+                const redIcon = L.icon({
+                    iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwLjYgMTIuNSAyOC41IDEyLjUgMjguNVMyNSAyMy4xIDI1IDEyLjVDMjUgNS42IDE5LjQgMCAxMi41IDB6bTAgMTcuNWMtMi44IDAtNS0yLjItNS01czIuMi01IDUtNSA1IDIuMiA1IDUtMi4yIDUtNSA1eiIgZmlsbD0iI2QxMjAyNyIvPjwvc3ZnPg==',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                });
+                
+                const marker = L.marker([lat, lng], { icon: redIcon }).addTo(map);
+                
+                // Simplified popup
+                const meetings = churchData.meetings ? churchData.meetings.split('\n')[0] : '';
+                const popupContent = `
+                    <div style="font-family: 'Roboto', Helvetica, Arial, sans-serif; font-size: 13px;">
+                        <h3 style="margin: 0 0 6px 0; color: #d12027; font-size: 16px; font-weight: 600;">${churchData.church}</h3>
+                        <p style="margin: 0 0 4px 0; color: #333; font-size: 13px;">${churchData.contact || ''}</p>
+                        ${churchData.email ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><a href="mailto:${churchData.email}" style="color: #d12027; text-decoration: none;">Email</a></p>` : ''}
+                        ${meetings ? `<p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">${meetings}</p>` : ''}
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent, {
+                    maxWidth: 300,
+                    className: 'et-church-popup'
+                }).openPopup();
+                
+                console.log('✅ Map fully loaded!');
+                
+                // Show info box (same style as edit mode)
+                const infoBox = document.getElementById('marketing-map-info');
+                const imageHtml = churchData.churchImage ? 
+                    `<div style="flex: 0 0 180px;"><img src="${churchData.churchImage}" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;"></div>` : '';
+                
+                infoBox.innerHTML = `
+                    <div style="display: flex; gap: 20px; align-items: start;">
+                        ${imageHtml}
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 12px 0; color: #1B3A5C; font-size: 1.1em;">${churchData.church}</h4>
+                            <p style="margin: 6px 0; color: #555; line-height: 1.6;"><strong>Address:</strong> ${churchData.address}</p>
+                            ${churchData.contact ? `<p style="margin: 6px 0; color: #555;"><strong>Contact:</strong> ${churchData.contact}</p>` : ''}
+                            ${churchData.phone ? `<p style="margin: 6px 0; color: #555;"><strong>Phone:</strong> ${churchData.phone}</p>` : ''}
+                            ${churchData.email ? `<p style="margin: 6px 0; color: #555;"><strong>Email:</strong> ${churchData.email}</p>` : ''}
+                            ${meetings ? `<p style="margin: 6px 0; color: #555;"><strong>Services:</strong> ${meetings}</p>` : ''}
+                            <div style="margin-top: 16px; padding: 14px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 6px;">
+                                <p style="margin: 0; color: #075985; font-size: 0.95em; font-weight: 500;">
+                                    ✓ Your church is live in our Church Finder, reaching 20,000+ online searchers monthly
+                                </p>
                             </div>
                         </div>
-                    `;
+                    </div>
+                `;
                 } else {
                     console.warn('No lat/lng in location data');
                     throw new Error('No location coordinates');
@@ -1847,36 +1847,32 @@
                 return;
             }
             
-            try {
-                console.log('📡 Fetching church location from API...');
-                
-                // Fetch church location from Store Locator API
-                // Try full address first for best results
-                const searchTerm = window.churchData.address || window.churchData.countyOrCity || window.churchData.church;
-                
-                console.log('Searching Store Locator for:', searchTerm);
-                
-                const response = await fetch(`/.netlify/functions/get-church-location?church=${encodeURIComponent(searchTerm)}&name=${encodeURIComponent(window.churchData.church)}`);
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ API response error:', errorText);
-                    throw new Error('Failed to fetch church location');
+            // Check if we have Lat/Long from Airtable
+            if (!window.churchData.latitude || !window.churchData.longitude) {
+                console.error('❌ No latitude/longitude available for this church');
+                const mapElement = document.getElementById('church-map');
+                if (mapElement) {
+                    mapElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Map location not available for this church</div>';
                 }
+                return;
+            }
+            
+            try {
+                const lat = parseFloat(window.churchData.latitude);
+                const lng = parseFloat(window.churchData.longitude);
                 
-                const data = await response.json();
-                const location = data.location;
+                console.log('📍 Using Airtable coordinates:', { lat, lng });
                 
-                console.log('✅ Church location data:', location);
+                if (isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates');
+                }
                 
                 console.log('🗺️ Initializing Leaflet Map...');
                 
                 // Initialize Leaflet Map (OpenStreetMap - same as ExpressMaps)
                 const mapElement = document.getElementById('church-map');
                 
-                churchMap = L.map(mapElement).setView([location.lat, location.lng], 15);
+                churchMap = L.map(mapElement).setView([lat, lng], 15);
                 
                 // Add OpenStreetMap tiles (same as ExpressMaps)
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1894,7 +1890,7 @@
                 });
                 
                 // Add marker with red icon
-                churchMarker = L.marker([location.lat, location.lng], { icon: redIcon }).addTo(churchMap);
+                churchMarker = L.marker([lat, lng], { icon: redIcon }).addTo(churchMap);
                 
                 // Simplified popup using Airtable data
                 const popupContent = `
